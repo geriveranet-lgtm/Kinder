@@ -129,6 +129,43 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "name", "items"]
+    },
+    "Club": {
+      "title": "Club",
+      "description": "A book or film club.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "type": { "type": "string", "enum": ["book", "film"] },
+        "creatorId": { "type": "string" },
+        "rules": { "type": "string" },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userId": { "type": "string" },
+              "role": { "type": "string", "enum": ["admin", "moderator", "member"] }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "type", "creatorId", "createdAt"]
+    },
+    "Discussion": {
+      "title": "Discussion",
+      "description": "A discussion message within a club.",
+      "type": "object",
+      "properties": {
+        "clubId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["clubId", "userId", "userName", "text", "createdAt"]
     }
   },
   "firestore": {
@@ -164,9 +201,21 @@
       "schema": "Collection",
       "description": "User collections"
     },
+    "/clubs/{clubId}": {
+      "schema": "Club",
+      "description": "Clubs collection"
+    },
+    "/clubs/{clubId}/discussions/{discussionId}": {
+      "schema": "Discussion",
+      "description": "Discussions within a club"
+    },
     "/test/{docId}": {
       "schema": "object",
       "description": "Collection used for connection testing"
+    },
+    "movies": {
+      "schema": { "$ref": "Movie" },
+      "description": "Collection of movies."
     }
   }
 }

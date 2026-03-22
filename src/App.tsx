@@ -24,15 +24,22 @@ import {
   Plus,
   Database,
   Settings,
-  Edit2
+  Edit2,
+  Users
 } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { auth, signIn, logOut, db } from './firebase';
+import { auth, signIn, logOut, db, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink } from './firebase';
 import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { MovieService, Movie, Book, Content, Review, Comment, UserProfile, Collection, Message } from './services/movieService';
 import { GeminiService } from './services/geminiService';
+import { CommunityView } from './components/CommunityView';
+import { ReviewsView } from './components/ReviewsView';
+import { ClubDetailView } from './components/ClubDetailView';
+import { SuggestionsView } from './components/SuggestionsView';
+import { AdminSeeder } from './components/AdminSeeder';
+import { ImageValidator } from './components/ImageValidator';
 
 // Utility for tailwind classes
 function cn(...inputs: ClassValue[]) {
@@ -50,10 +57,10 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
     </div>
     <div className="flex justify-around w-full md:w-auto md:gap-8">
       {[
-        { id: 'swipe', icon: Heart, label: 'Свайп' },
         { id: 'battle', icon: Swords, label: 'Битва' },
-        { id: 'ranking', icon: Trophy, label: 'Рейтинг' },
-        { id: 'user-ranking', icon: User, label: 'Топ' },
+        { id: 'reviews', icon: MessageSquare, label: 'Рецензии' },
+        { id: 'community', icon: Users, label: 'Клубы' },
+        { id: 'users', icon: Trophy, label: 'Топ' },
         { id: 'suggestions', icon: Sparkles, label: 'Советы' },
       ].map((tab) => (
         <button
@@ -1224,6 +1231,23 @@ const ContentDetails = ({
                   <p className="text-[10px] text-gray-400 italic">У вас пока нет коллекций</p>
                 )}
               </div>
+              <div className="mt-4 pt-4 border-t">
+                <input 
+                  type="text" 
+                  placeholder="Новая коллекция..." 
+                  className="w-full p-2 text-xs border rounded-xl mb-2"
+                  onKeyDown={async (e) => {
+                    if (e.key === 'Enter') {
+                      const name = e.currentTarget.value;
+                      if (!name.trim()) return;
+                      await MovieService.createCollection(auth.currentUser!.uid, name);
+                      const updated = await MovieService.getUserCollections(auth.currentUser!.uid);
+                      setUserCollections(updated);
+                      e.currentTarget.value = '';
+                    }
+                  }}
+                />
+              </div>
             </div>
           )}
         </div>
@@ -2365,9 +2389,13 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState('swipe');
   const [movies, setMovies] = useState<Movie[]>([]);
   const [books, setBooks] = useState<Book[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [selectedClub, setSelectedClub] = useState<any>(null);
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [email, setEmail] = useState('');
+  const [isEmailLinkSent, setIsEmailLinkSent] = useState(false);
 
   const isAdmin = user?.email === "geriveranet@gmail.com";
 
@@ -2387,6 +2415,26 @@ function AppContent() {
       setIsSyncing(false);
     }
   };
+
+  useEffect(() => {
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+      let email = window.localStorage.getItem('emailForSignIn');
+      if (!email) {
+        email = window.prompt('Пожалуйста, введите ваш email для подтверждения входа:');
+      }
+      if (email) {
+        signInWithEmailLink(auth, email, window.location.href)
+          .then((result) => {
+            window.localStorage.removeItem('emailForSignIn');
+            console.log("Email link sign in successful");
+          })
+          .catch((err) => {
+            console.error("Email link sign in error:", err);
+            alert("Ошибка при входе по ссылке.");
+          });
+      }
+    }
+  }, []);
 
   useEffect(() => {
     console.log("Current user state in AppContent:", user ? `User: ${user.email}` : 'No user');
@@ -2432,9 +2480,16 @@ function AppContent() {
       setBooks(b);
     });
 
+    console.log('Attaching reviews listener...');
+    const unsubReviews = MovieService.getAllReviews((r) => {
+      console.log(`Reviews updated: ${r.length} reviews found`);
+      setReviews(r);
+    });
+
     return () => {
       unsubMovies();
       unsubBooks();
+      unsubReviews();
     };
   }, []);
 
@@ -2492,45 +2547,59 @@ function AppContent() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
-            {activeTab === 'swipe' && (
-              <SwipeView movies={movies} books={books} onSwipe={handleSwipe} />
+            {activeTab === 'reviews' && (
+              <ReviewsView 
+                reviews={reviews} 
+                movies={movies} 
+                books={books} 
+                onAddContent={() => console.log('Add content modal')}
+              />
+            )}
+            {activeTab === 'community' && !selectedClub && (
+              <CommunityView onSelectClub={setSelectedClub} />
+            )}
+            {activeTab === 'users' && !selectedClub && (
+              <>
+                <RankingView 
+                  movies={movies} 
+                  books={books}
+                  onSelect={(item: any) => {
+                    if (item.type === 'user') {
+                      handleUserClick(item.id || item.uid);
+                    } else {
+                      setSelectedContent(item);
+                    }
+                  }} 
+                  isAdmin={isAdmin}
+                  onSync={handleSync}
+                  isSyncing={isSyncing}
+                  defaultContentType="movie"
+                />
+                <RankingView 
+                  movies={movies} 
+                  books={books}
+                  onSelect={(item: any) => {
+                    if (item.type === 'user') {
+                      handleUserClick(item.id || item.uid);
+                    } else {
+                      setSelectedContent(item);
+                    }
+                  }} 
+                  isAdmin={isAdmin}
+                  onSync={handleSync}
+                  isSyncing={isSyncing}
+                  defaultContentType="user"
+                />
+              </>
+            )}
+            {selectedClub && (
+              <ClubDetailView club={selectedClub} onClose={() => setSelectedClub(null)} />
+            )}
+            {activeTab === 'suggestions' && (
+              <SuggestionsView movies={movies} books={books} />
             )}
             {activeTab === 'battle' && (
               <BattleMainView movies={movies} books={books} onBattle={handleBattle} />
-            )}
-            {activeTab === 'ranking' && (
-              <RankingView 
-                movies={movies} 
-                books={books}
-                onSelect={(item: any) => {
-                  if (item.type === 'user') {
-                    handleUserClick(item.id || item.uid);
-                  } else {
-                    setSelectedContent(item);
-                  }
-                }} 
-                isAdmin={isAdmin}
-                onSync={handleSync}
-                isSyncing={isSyncing}
-                defaultContentType="movie"
-              />
-            )}
-            {activeTab === 'user-ranking' && (
-              <RankingView 
-                movies={movies} 
-                books={books}
-                onSelect={(item: any) => {
-                  if (item.type === 'user') {
-                    handleUserClick(item.id || item.uid);
-                  } else {
-                    setSelectedContent(item);
-                  }
-                }} 
-                isAdmin={isAdmin}
-                onSync={handleSync}
-                isSyncing={isSyncing}
-                defaultContentType="user"
-              />
             )}
             {activeTab === 'suggestions' && (
               <SuggestionsView 
@@ -2539,6 +2608,12 @@ function AppContent() {
                 books={books} 
                 onSelect={setSelectedContent} 
               />
+            )}
+            {activeTab === 'settings' && (
+              <div className="p-4 space-y-4">
+                <AdminSeeder />
+                <ImageValidator />
+              </div>
             )}
             {activeTab === 'profile' && (
               <ProfileView 
@@ -2589,20 +2664,53 @@ function AppContent() {
             </div>
             <h2 className="text-2xl font-black mb-2">Присоединяйтесь!</h2>
             <p className="text-gray-500 mb-8">Войдите, чтобы оценивать фильмы, участвовать в битвах и оставлять отзывы!</p>
-            <button 
-              onClick={async () => {
-                try {
-                  console.log("Sign in button in overlay clicked");
-                  await signIn();
-                  console.log("Sign in call in overlay finished");
-                } catch (err) {
-                  console.error("Sign in error in overlay:", err);
-                }
-              }}
-              className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
-            >
-              Войти через Google
-            </button>
+            
+            {!isEmailLinkSent ? (
+              <div className="space-y-4">
+                <button 
+                  onClick={async () => {
+                    try {
+                      await signIn();
+                    } catch (err) {
+                      console.error("Sign in error:", err);
+                    }
+                  }}
+                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
+                >
+                  Войти через Google
+                </button>
+                <div className="text-gray-400 text-sm">или</div>
+                <input 
+                  type="email" 
+                  placeholder="Ваш email" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-4 rounded-2xl border border-gray-200"
+                />
+                <button 
+                  onClick={async () => {
+                    if (!email.trim()) return;
+                    try {
+                      const actionCodeSettings = {
+                        url: window.location.href,
+                        handleCodeInApp: true,
+                      };
+                      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+                      window.localStorage.setItem('emailForSignIn', email);
+                      setIsEmailLinkSent(true);
+                    } catch (err) {
+                      console.error("Email link error:", err);
+                      alert("Ошибка при отправке ссылки на почту.");
+                    }
+                  }}
+                  className="w-full bg-gray-100 text-gray-800 py-4 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-all"
+                >
+                  Войти по ссылке
+                </button>
+              </div>
+            ) : (
+              <p className="text-indigo-600 font-bold">Ссылка для входа отправлена на {email}!</p>
+            )}
           </div>
         </div>
       )}

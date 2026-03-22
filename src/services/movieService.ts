@@ -204,6 +204,17 @@ export const MovieService = {
     });
   },
 
+  getAllReviews: (callback: (reviews: any[]) => void) => {
+    const path = 'reviews';
+    const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (snapshot) => {
+      const reviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(reviews);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    });
+  },
+
   getTopMovies: (callback: (movies: Movie[]) => void) => {
     const path = 'movies';
     const q = query(collection(db, path), orderBy('rating', 'desc'), limit(10));
@@ -358,21 +369,148 @@ export const MovieService = {
     }
   },
 
-  createCollection: async (name: string, description: string, isPublic: boolean = true) => {
+  createClub: async (name: string, description: string, type: 'book' | 'film') => {
     if (!auth.currentUser) return;
-    const path = 'collections';
+    const path = 'clubs';
     try {
-      const collectionData = {
-        userId: auth.currentUser.uid,
-        userName: auth.currentUser.displayName || 'Anonymous',
+      return await addDoc(collection(db, path), {
         name,
         description,
-        items: [],
-        isPublic,
-        favoritesCount: 0,
+        type,
+        creatorId: auth.currentUser.uid,
+        members: [{ userId: auth.currentUser.uid, role: 'admin' }],
+        rules: '',
         createdAt: serverTimestamp()
-      };
-      return await addDoc(collection(db, path), collectionData);
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, path);
+    }
+  },
+
+  seedClubs: async () => {
+    const path = 'clubs';
+    try {
+      const snap = await getDocs(collection(db, path));
+      if (snap.empty) {
+        const testClubs = [
+          {
+            name: 'Клуб любителей фантастики',
+            description: 'Обсуждаем лучшие научно-фантастические фильмы и книги. Присоединяйтесь!',
+            type: 'film',
+            creatorId: 'test-admin-1',
+            members: [
+              { userId: 'test-admin-1', role: 'admin' },
+              { userId: 'user-2', role: 'member' },
+              { userId: 'user-3', role: 'member' },
+              { userId: 'user-4', role: 'member' },
+              { userId: 'user-5', role: 'member' }
+            ],
+            rules: 'Без спойлеров!',
+            createdAt: serverTimestamp()
+          },
+          {
+            name: 'Классическая литература',
+            description: 'Читаем и обсуждаем классику мировой литературы.',
+            type: 'book',
+            creatorId: 'test-admin-2',
+            members: [
+              { userId: 'test-admin-2', role: 'admin' },
+              { userId: 'user-6', role: 'member' },
+              { userId: 'user-7', role: 'member' }
+            ],
+            rules: 'Уважительное общение.',
+            createdAt: serverTimestamp()
+          },
+          {
+            name: 'Кинокритики',
+            description: 'Глубокий анализ современного кинематографа.',
+            type: 'film',
+            creatorId: 'test-admin-3',
+            members: [
+              { userId: 'test-admin-3', role: 'admin' },
+              { userId: 'user-8', role: 'member' },
+              { userId: 'user-9', role: 'member' },
+              { userId: 'user-10', role: 'member' }
+            ],
+            rules: 'Аргументируйте свое мнение.',
+            createdAt: serverTimestamp()
+          }
+        ];
+        
+        for (const club of testClubs) {
+          await addDoc(collection(db, path), club);
+        }
+      }
+    } catch (error) {
+      console.error('Error seeding clubs:', error);
+    }
+  },
+
+  updateMemberRole: async (clubId: string, userId: string, role: 'admin' | 'moderator' | 'member') => {
+    const clubRef = doc(db, 'clubs', clubId);
+    const clubSnap = await getDoc(clubRef);
+    if (!clubSnap.exists()) return;
+    
+    const clubData = clubSnap.data();
+    const members = clubData.members.map((m: any) => 
+      m.userId === userId ? { ...m, role } : m
+    );
+    
+    try {
+      await updateDoc(clubRef, { members });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'clubs');
+    }
+  },
+
+  removeMember: async (clubId: string, userId: string) => {
+    const clubRef = doc(db, 'clubs', clubId);
+    const clubSnap = await getDoc(clubRef);
+    if (!clubSnap.exists()) return;
+    
+    const clubData = clubSnap.data();
+    const members = clubData.members.filter((m: any) => m.userId !== userId);
+    
+    try {
+      await updateDoc(clubRef, { members });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'clubs');
+    }
+  },
+
+  getClubs: (callback: (clubs: any[]) => void) => {
+    const path = 'clubs';
+    const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+    return onSnapshot(q, (snapshot) => {
+      const clubs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(clubs);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    });
+  },
+
+  getClubDiscussions: (clubId: string, callback: (discussions: any[]) => void) => {
+    const path = `clubs/${clubId}/discussions`;
+    const q = query(collection(db, path), orderBy('createdAt', 'asc'));
+    return onSnapshot(q, (snapshot) => {
+      const discussions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      callback(discussions);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, path);
+    });
+  },
+
+  addDiscussion: async (clubId: string, text: string) => {
+    if (!auth.currentUser) return;
+    const path = `clubs/${clubId}/discussions`;
+    try {
+      await addDoc(collection(db, path), {
+        clubId,
+        userId: auth.currentUser.uid,
+        userName: auth.currentUser.displayName || 'Anonymous',
+        text,
+        createdAt: serverTimestamp()
+      });
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, path);
     }
@@ -386,6 +524,23 @@ export const MovieService = {
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, 'collections');
+    }
+  },
+
+  createCollection: async (userId: string, name: string) => {
+    const path = 'collections';
+    try {
+      return await addDoc(collection(db, path), {
+        userId,
+        name,
+        description: '',
+        items: [],
+        isPublic: false,
+        favoritesCount: 0,
+        createdAt: serverTimestamp()
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, path);
     }
   },
 
