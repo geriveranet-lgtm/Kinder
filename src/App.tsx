@@ -60,7 +60,8 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
           key={tab.id}
           onClick={() => {
             if (tab.id === 'profile' && !user) {
-              signIn();
+              console.log("Profile tab clicked, but no user. Calling signIn...");
+              signIn().catch(err => console.error("Profile tab sign in error:", err));
               return;
             }
             onTabChange(tab.id);
@@ -106,7 +107,18 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
           </button>
         </div>
       ) : (
-        <button onClick={signIn} className="bg-indigo-600 text-white px-4 py-2 rounded-full md:rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm md:shadow-none">
+        <button 
+          onClick={async () => {
+            try {
+              console.log("Navbar sign in button clicked");
+              await signIn();
+              console.log("Navbar sign in call finished");
+            } catch (err) {
+              console.error("Navbar sign in error:", err);
+            }
+          }} 
+          className="bg-indigo-600 text-white px-4 py-2 rounded-full md:rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm md:shadow-none"
+        >
           Войти
         </button>
       )}
@@ -2377,6 +2389,10 @@ function AppContent() {
   };
 
   useEffect(() => {
+    console.log("Current user state in AppContent:", user ? `User: ${user.email}` : 'No user');
+  }, [user]);
+
+  useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       console.log('Auth state changed:', u ? `User: ${u.email}` : 'No user');
       setUser(u);
@@ -2424,7 +2440,8 @@ function AppContent() {
 
   const handleSwipe = async (contentId: string, type: 'like' | 'dislike' | 'not_watched', contentType: 'movie' | 'book') => {
     if (!user) {
-      signIn();
+      console.log("Swipe attempted, but no user. Calling signIn...");
+      signIn().catch(err => console.error("Swipe sign in error:", err));
       return;
     }
     await MovieService.swipeContent(contentId, contentType, type);
@@ -2553,7 +2570,8 @@ function AppContent() {
             }
             onToggleFavorite={(isFav) => {
               if (!user) {
-                signIn();
+                console.log("Toggle favorite attempted, but no user. Calling signIn...");
+                signIn().catch(err => console.error("Toggle favorite sign in error:", err));
                 return;
               }
               MovieService.toggleFavorite(selectedContent.id, selectedContent.type, user.uid, isFav);
@@ -2572,7 +2590,15 @@ function AppContent() {
             <h2 className="text-2xl font-black mb-2">Присоединяйтесь!</h2>
             <p className="text-gray-500 mb-8">Войдите, чтобы оценивать фильмы, участвовать в битвах и оставлять отзывы!</p>
             <button 
-              onClick={signIn}
+              onClick={async () => {
+                try {
+                  console.log("Sign in button in overlay clicked");
+                  await signIn();
+                  console.log("Sign in call in overlay finished");
+                } catch (err) {
+                  console.error("Sign in error in overlay:", err);
+                }
+              }}
               className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200"
             >
               Войти через Google

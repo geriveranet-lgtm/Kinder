@@ -8,7 +8,22 @@ export const auth = getAuth(app);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId || undefined);
 export const googleProvider = new GoogleAuthProvider();
 
-export const signIn = () => signInWithPopup(auth, googleProvider);
+export const signIn = async () => {
+  try {
+    console.log("Starting sign in with popup...");
+    const result = await signInWithPopup(auth, googleProvider);
+    console.log("Sign in successful:", result.user.email);
+    return result;
+  } catch (error: any) {
+    console.error("Sign in failed:", error);
+    if (error.code === 'auth/popup-blocked') {
+      console.error("Popup was blocked by the browser. Please allow popups for this site.");
+    } else if (error.code === 'auth/network-request-failed') {
+      console.error("Network request failed. Please check your internet connection and Firebase configuration.");
+    }
+    throw error;
+  }
+};
 export const logOut = () => signOut(auth);
 
 // Test connection
