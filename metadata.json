@@ -1,0 +1,5 @@
+{
+  "name": "Kinder",
+  "description": "A movie discovery app with Tinder-style swiping, movie battles, and AI-powered recommendations.",
+  "requestFramePermissions": []
+}

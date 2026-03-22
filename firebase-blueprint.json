@@ -1,0 +1,172 @@
+{
+  "entities": {
+    "Movie": {
+      "title": "Movie",
+      "description": "A movie in the database",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Movie title" },
+        "description": { "type": "string", "description": "Movie plot" },
+        "posterUrl": { "type": "string", "description": "URL to movie poster" },
+        "rating": { "type": "number", "description": "Average user rating" },
+        "totalVotes": { "type": "integer", "description": "Total number of ratings" },
+        "battleWins": { "type": "integer", "description": "Number of battle wins" },
+        "battleLosses": { "type": "integer", "description": "Number of battle losses" },
+        "swipeLikes": { "type": "integer", "description": "Number of likes in swiping" },
+        "swipeDislikes": { "type": "integer", "description": "Number of dislikes in swiping" }
+      },
+      "required": ["title", "posterUrl"]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "A book in the database",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Book title" },
+        "description": { "type": "string", "description": "Book summary" },
+        "posterUrl": { "type": "string", "description": "URL to book cover" },
+        "rating": { "type": "number", "description": "Average user rating" },
+        "totalVotes": { "type": "integer", "description": "Total number of ratings" },
+        "battleWins": { "type": "integer", "description": "Number of battle wins" },
+        "battleLosses": { "type": "integer", "description": "Number of battle losses" },
+        "swipeLikes": { "type": "integer", "description": "Number of likes in swiping" },
+        "swipeDislikes": { "type": "integer", "description": "Number of dislikes in swiping" },
+        "author": { "type": "string" },
+        "pages": { "type": "integer" },
+        "publisher": { "type": "string" },
+        "releaseYear": { "type": "integer" },
+        "genre": { "type": "string" }
+      },
+      "required": ["title", "posterUrl", "author"]
+    },
+    "Swipe": {
+      "title": "Swipe",
+      "description": "A user's swipe action on a movie or book",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "contentId": { "type": "string" },
+        "contentType": { "type": "string", "enum": ["movie", "book"] },
+        "type": { "type": "string", "enum": ["like", "dislike", "not_watched"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "contentId", "type"]
+    },
+    "Battle": {
+      "title": "Battle",
+      "description": "A battle between two items",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "itemAId": { "type": "string" },
+        "itemBId": { "type": "string" },
+        "winnerId": { "type": "string" },
+        "contentType": { "type": "string", "enum": ["movie", "book"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "itemAId", "itemBId", "winnerId"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "A content review",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "contentId": { "type": "string" },
+        "contentType": { "type": "string", "enum": ["movie", "book"] },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "contentId", "rating", "comment"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A content comment",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "contentId": { "type": "string" },
+        "contentType": { "type": "string", "enum": ["movie", "book"] },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "contentId", "text"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "email": { "type": "string" }
+      }
+    },
+    "Collection": {
+      "title": "Collection",
+      "description": "A user-created movie/book collection",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "items": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string", "enum": ["movie", "book"] }
+            }
+          }
+        },
+        "isPublic": { "type": "boolean" },
+        "favoritesCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "items"]
+    }
+  },
+  "firestore": {
+    "/movies/{movieId}": {
+      "schema": "Movie",
+      "description": "Collection of movies"
+    },
+    "/books/{bookId}": {
+      "schema": "Book",
+      "description": "Collection of books"
+    },
+    "/swipes/{swipeId}": {
+      "schema": "Swipe",
+      "description": "User swipes"
+    },
+    "/battles/{battleId}": {
+      "schema": "Battle",
+      "description": "Movie battles"
+    },
+    "/reviews/{reviewId}": {
+      "schema": "Review",
+      "description": "Movie reviews"
+    },
+    "/comments/{commentId}": {
+      "schema": "Comment",
+      "description": "Movie comments"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/collections/{collectionId}": {
+      "schema": "Collection",
+      "description": "User collections"
+    },
+    "/test/{docId}": {
+      "schema": "object",
+      "description": "Collection used for connection testing"
+    }
+  }
+}

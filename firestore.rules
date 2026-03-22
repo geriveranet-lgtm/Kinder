@@ -1,0 +1,135 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "geriveranet@gmail.com" ||
+          (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
+    }
+    
+    function isValidMovie(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.posterUrl is string && (data.posterUrl.matches("^https://.*") || data.posterUrl.matches("^http://.*")) &&
+             data.description is string && data.description.size() < 5000;
+    }
+    
+    function isValidReview(data) {
+      return (data.userId == request.auth.uid || isAdmin()) &&
+             data.contentId is string &&
+             data.contentType in ['movie', 'book'] &&
+             data.rating is number && data.rating >= 0 && data.rating <= 10 &&
+             data.comment is string && data.comment.size() < 5000 &&
+             data.userName is string && data.userName.size() < 100;
+    }
+
+    function isValidSwipe(data) {
+      return (data.userId == request.auth.uid || isAdmin()) &&
+             data.contentId is string &&
+             data.contentType in ['movie', 'book'] &&
+             data.type in ['like', 'dislike', 'not_watched'];
+    }
+
+    function isValidBattle(data) {
+      return (data.userId == request.auth.uid || isAdmin()) &&
+             data.itemAId is string &&
+             data.itemBId is string &&
+             data.contentType in ['movie', 'book'] &&
+             data.winnerId in [data.itemAId, data.itemBId];
+    }
+
+    function isValidComment(data) {
+      return (data.userId == request.auth.uid || isAdmin()) &&
+             data.contentId is string &&
+             data.contentType in ['movie', 'book'] &&
+             data.text is string && data.text.size() < 5000 &&
+             data.userName is string && data.userName.size() < 100;
+    }
+
+    function isValidCollection(data) {
+      return (data.userId == request.auth.uid || isAdmin()) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.description is string && data.description.size() < 1000 &&
+             data.items is list &&
+             data.isPublic is bool &&
+             data.favoritesCount is number;
+    }
+    
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    match /movies/{movieId} {
+      allow read: if true;
+      allow update: if isAuthenticated();
+      allow create, delete: if isAdmin();
+    }
+
+    match /books/{bookId} {
+      allow read: if true;
+      allow update: if isAuthenticated();
+      allow create, delete: if isAdmin();
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidReview(request.resource.data);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+    
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidComment(request.resource.data);
+      allow update, delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    match /swipes/{swipeId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidSwipe(request.resource.data);
+    }
+
+    match /battles/{battleId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidBattle(request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId) || isAdmin();
+    }
+
+    match /collections/{collectionId} {
+      allow read: if true; // Let the query filters handle privacy
+      allow create: if isAuthenticated() && isValidCollection(request.resource.data);
+      allow update: if (isOwner(resource.data.userId) && isValidCollection(request.resource.data)) ||
+                     (isAuthenticated() && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['favoritesCount']));
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    match /messages/{messageId} {
+      allow read: if isAuthenticated() && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+    }
+
+    match /test/{docId} {
+      allow read: if true;
+    }
+
+    match /upcoming_movies/{movieId} {
+      allow read: if true;
+      allow update: if isAuthenticated();
+      allow create, delete: if isAdmin();
+    }
+  }
+}
