@@ -2396,6 +2396,7 @@ function AppContent() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [email, setEmail] = useState('');
   const [isEmailLinkSent, setIsEmailLinkSent] = useState(false);
+  const [isSendingLink, setIsSendingLink] = useState(false);
 
   const isAdmin = user?.email === "geriveranet@gmail.com";
 
@@ -2416,8 +2417,13 @@ function AppContent() {
     }
   };
 
+  const isSigningIn = useRef(false);
+
   useEffect(() => {
     if (isSignInWithEmailLink(auth, window.location.href)) {
+      if (isSigningIn.current) return;
+      isSigningIn.current = true;
+      
       let email = window.localStorage.getItem('emailForSignIn');
       if (!email) {
         email = window.prompt('Пожалуйста, введите ваш email для подтверждения входа:');
@@ -2427,11 +2433,20 @@ function AppContent() {
           .then((result) => {
             window.localStorage.removeItem('emailForSignIn');
             console.log("Email link sign in successful");
+            // Clean up the URL so it doesn't trigger again on refresh
+            window.history.replaceState(null, '', window.location.pathname);
           })
           .catch((err) => {
             console.error("Email link sign in error:", err);
-            alert("Ошибка при входе по ссылке.");
+            if (err.code !== 'auth/invalid-action-code') {
+              alert("Ошибка при входе по ссылке.");
+            }
+          })
+          .finally(() => {
+            isSigningIn.current = false;
           });
+      } else {
+        isSigningIn.current = false;
       }
     }
   }, []);
@@ -2689,7 +2704,8 @@ function AppContent() {
                 />
                 <button 
                   onClick={async () => {
-                    if (!email.trim()) return;
+                    if (!email.trim() || isSendingLink) return;
+                    setIsSendingLink(true);
                     try {
                       const actionCodeSettings = {
                         url: window.location.href,
@@ -2701,11 +2717,15 @@ function AppContent() {
                     } catch (err) {
                       console.error("Email link error:", err);
                       alert("Ошибка при отправке ссылки на почту.");
+                    } finally {
+                      setIsSendingLink(false);
                     }
                   }}
-                  className="w-full bg-gray-100 text-gray-800 py-4 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-all"
+                  disabled={isSendingLink}
+                  className="w-full bg-gray-100 text-gray-800 py-4 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                 >
-                  Войти по ссылке
+                  {isSendingLink && <Loader2 className="w-5 h-5 animate-spin" />}
+                  {isSendingLink ? "Отправка..." : "Получить ссылку на почту"}
                 </button>
               </div>
             ) : (
