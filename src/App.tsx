@@ -2049,6 +2049,8 @@ function AppContent() {
   const [email, setEmail] = useState('');
   const [isEmailLinkSent, setIsEmailLinkSent] = useState(false);
   const [isSendingLink, setIsSendingLink] = useState(false);
+  const [isProcessingEmailLink, setIsProcessingEmailLink] = useState(false);
+  const [emailPromptVisible, setEmailPromptVisible] = useState(false);
 
   const isAdmin = user?.email === "geriveranet@gmail.com";
 
@@ -2071,17 +2073,59 @@ function AppContent() {
 
   const isSigningIn = useRef(false);
 
+  const handleEmailPromptSubmit = async (emailForSignIn: string) => {
+    const trimmedEmail = emailForSignIn.trim();
+    if (!trimmedEmail) return;
+    
+    setIsProcessingEmailLink(true);
+    
+    try {
+      await signInWithEmailLink(auth, trimmedEmail, window.location.href);
+      window.localStorage.removeItem('emailForSignIn');
+      console.log("Email link sign in successful");
+      window.history.replaceState(null, '', window.location.pathname);
+      setEmailPromptVisible(false);
+    } catch (err: any) {
+      console.error("Email link sign in error:", err);
+      if (err.code === 'auth/expired-action-code') {
+        alert("Ошибка: Ссылка для входа истекла. Пожалуйста, запросите новую.");
+        window.history.replaceState(null, '', window.location.pathname);
+        setEmailPromptVisible(false);
+      } else if (err.code === 'auth/invalid-action-code') {
+        console.warn("Invalid action code - link might be expired or already used");
+        window.history.replaceState(null, '', window.location.pathname);
+        setEmailPromptVisible(false);
+      } else if (err.code === 'auth/invalid-email') {
+        alert("Ошибка: Неверный email адрес. Пожалуйста, убедитесь, что вы ввели тот же email, на который была отправлена ссылка.");
+      } else if (err.code === 'auth/quota-exceeded') {
+        alert("Ошибка: Превышен дневной лимит на вход по ссылке. Пожалуйста, используйте вход через Google или попробуйте завтра.");
+        window.history.replaceState(null, '', window.location.pathname);
+        setEmailPromptVisible(false);
+      } else {
+        alert(`Ошибка при входе по ссылке: ${err.message || err}\n\nКод ошибки: ${err.code || 'unknown'}`);
+        window.history.replaceState(null, '', window.location.pathname);
+        setEmailPromptVisible(false);
+      }
+    } finally {
+      isSigningIn.current = false;
+      setIsProcessingEmailLink(false);
+    }
+  };
+
   useEffect(() => {
     if (isSignInWithEmailLink(auth, window.location.href)) {
       if (isSigningIn.current) return;
       isSigningIn.current = true;
+      setIsProcessingEmailLink(true);
       
-      let email = window.localStorage.getItem('emailForSignIn');
-      if (!email) {
-        email = window.prompt('Пожалуйста, введите ваш email для подтверждения входа:');
-      }
-      if (email) {
-        signInWithEmailLink(auth, email, window.location.href)
+      let emailForSignIn = window.localStorage.getItem('emailForSignIn');
+      if (!emailForSignIn) {
+        setEmailPromptVisible(true);
+        setIsProcessingEmailLink(false);
+        // We don't set isSigningIn.current to false here because we are waiting for user input
+        // The actual sign in will happen when the user submits the prompt
+      } else {
+        signInWithEmailLink(auth, emailForSignIn, window.location.href)
           .then((result) => {
             window.localStorage.removeItem('emailForSignIn');
             console.log("Email link sign in successful");
@@ -2092,18 +2136,26 @@ function AppContent() {
             console.error("Email link sign in error:", err);
             if (err.code === 'auth/expired-action-code') {
               alert("Ошибка: Ссылка для входа истекла. Пожалуйста, запросите новую.");
+              window.history.replaceState(null, '', window.location.pathname);
             } else if (err.code === 'auth/invalid-action-code') {
               // This can happen if the link was already used or tampered with
               console.warn("Invalid action code - link might be expired or already used");
+              window.history.replaceState(null, '', window.location.pathname);
+            } else if (err.code === 'auth/invalid-email') {
+              alert("Ошибка: Неверный email адрес. Пожалуйста, убедитесь, что вы ввели тот же email, на который была отправлена ссылка.");
+              setEmailPromptVisible(true);
+            } else if (err.code === 'auth/quota-exceeded') {
+              alert("Ошибка: Превышен дневной лимит на вход по ссылке. Пожалуйста, используйте вход через Google или попробуйте завтра.");
+              window.history.replaceState(null, '', window.location.pathname);
             } else {
               alert(`Ошибка при входе по ссылке: ${err.message || err}\n\nКод ошибки: ${err.code || 'unknown'}`);
+              window.history.replaceState(null, '', window.location.pathname);
             }
           })
           .finally(() => {
             isSigningIn.current = false;
+            setIsProcessingEmailLink(false);
           });
-      } else {
-        isSigningIn.current = false;
       }
     }
   }, []);
@@ -2322,7 +2374,7 @@ function AppContent() {
         )}
       </AnimatePresence>
 
-      {!user && activeTab !== 'ranking' && (
+      {!user && activeTab !== 'ranking' && !isProcessingEmailLink && !emailPromptVisible && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-[2rem] max-w-sm w-full text-center shadow-2xl">
             <div className="w-20 h-20 bg-indigo-100 rounded-3xl flex items-center justify-center mx-auto mb-6">
@@ -2387,6 +2439,8 @@ function AppContent() {
                         alert("Ошибка: Некорректный адрес электронной почты.");
                       } else if (err.code === 'auth/too-many-requests') {
                         alert("Ошибка: Слишком много запросов. Пожалуйста, попробуйте позже.");
+                      } else if (err.code === 'auth/quota-exceeded') {
+                        alert("Ошибка: Превышен дневной лимит на отправку ссылок для входа. Пожалуйста, используйте вход через Google или попробуйте завтра.");
                       } else {
                         alert(`Ошибка при отправке ссылки: ${err.message || err}\n\nКод ошибки: ${err.code || 'unknown'}`);
                       }
@@ -2413,6 +2467,50 @@ function AppContent() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {isProcessingEmailLink && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-[2rem] max-w-sm w-full text-center shadow-2xl flex flex-col items-center">
+            <Loader2 className="w-12 h-12 text-indigo-600 animate-spin mb-4" />
+            <h2 className="text-xl font-black mb-2">Выполняется вход...</h2>
+            <p className="text-gray-500">Пожалуйста, подождите</p>
+          </div>
+        </div>
+      )}
+
+      {emailPromptVisible && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-white p-8 rounded-[2rem] max-w-sm w-full text-center shadow-2xl">
+            <h2 className="text-2xl font-black mb-2">Подтверждение</h2>
+            <p className="text-gray-500 mb-6">Пожалуйста, введите ваш email для завершения входа</p>
+            <input 
+              type="email" 
+              placeholder="Ваш email" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full p-4 rounded-2xl border border-gray-200 mb-4"
+            />
+            <div className="flex gap-3">
+              <button 
+                onClick={() => {
+                  setEmailPromptVisible(false);
+                  setIsProcessingEmailLink(false);
+                  isSigningIn.current = false;
+                }}
+                className="flex-1 bg-gray-100 text-gray-800 py-3 rounded-2xl font-bold hover:bg-gray-200 transition-all"
+              >
+                Отмена
+              </button>
+              <button 
+                onClick={() => handleEmailPromptSubmit(email)}
+                className="flex-1 bg-indigo-600 text-white py-3 rounded-2xl font-bold hover:bg-indigo-700 transition-all"
+              >
+                Войти
+              </button>
+            </div>
           </div>
         </div>
       )}
