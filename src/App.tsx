@@ -49,40 +49,8 @@ function cn(...inputs: ClassValue[]) {
 // --- Components ---
 
 const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
-  return (
-  <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg glass rounded-3xl px-6 py-3 flex justify-between items-center z-50 md:top-6 md:bottom-auto md:px-12">
-    <div className="hidden md:flex items-center gap-2 font-display text-2xl text-brand uppercase tracking-tighter">
-      <Trophy className="w-6 h-6" />
-      <span>Киндер</span>
-    </div>
-    <div className="flex justify-around w-full md:w-auto md:gap-8">
-      {[
-        { id: 'battle', icon: Swords, label: 'Битва' },
-        { id: 'reviews', icon: MessageSquare, label: 'Рецензии' },
-        { id: 'community', icon: Users, label: 'Клубы' },
-        { id: 'users', icon: Trophy, label: 'Топ' },
-        { id: 'suggestions', icon: Sparkles, label: 'Советы' },
-      ].map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => {
-            if (tab.id === 'profile' && !user) {
-              signIn().catch(err => console.error("Profile tab sign in error:", err));
-              return;
-            }
-            onTabChange(tab.id);
-          }}
-          className={cn(
-            "flex-1 flex flex-col items-center gap-1 transition-all duration-300",
-            activeTab === tab.id ? "text-brand scale-110" : "text-slate-400 hover:text-slate-600"
-          )}
-        >
-          <tab.icon className={cn("w-6 h-6", activeTab === tab.id && "fill-brand/20")} />
-          <span className="text-[10px] uppercase font-black tracking-widest hidden md:block">{tab.label}</span>
-        </button>
-      ))}
-    </div>
-    <div className="fixed top-4 right-4 md:static flex items-center gap-4 z-50">
+  const UserMenu = () => (
+    <>
       {user ? (
         <div className="flex items-center gap-3 bg-white/80 md:bg-transparent backdrop-blur-md md:backdrop-blur-none px-3 py-2 md:p-0 rounded-full md:rounded-none shadow-sm md:shadow-none border border-slate-200 md:border-none">
           {user.email === "geriveranet@gmail.com" && (
@@ -126,8 +94,51 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
           Войти
         </button>
       )}
-    </div>
-  </nav>
+    </>
+  );
+
+  return (
+    <>
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg glass rounded-3xl px-6 py-3 flex justify-between items-center z-50 md:top-6 md:bottom-auto md:px-12">
+        <div className="hidden md:flex items-center gap-2 font-display text-2xl text-brand uppercase tracking-tighter">
+          <Trophy className="w-6 h-6" />
+          <span>Киндер</span>
+        </div>
+        <div className="flex justify-around w-full md:w-auto md:gap-8">
+          {[
+            { id: 'battle', icon: Swords, label: 'Битва' },
+            { id: 'reviews', icon: MessageSquare, label: 'Рецензии' },
+            { id: 'community', icon: Users, label: 'Клубы' },
+            { id: 'users', icon: Trophy, label: 'Топ' },
+            { id: 'suggestions', icon: Sparkles, label: 'Советы' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => {
+                if (tab.id === 'profile' && !user) {
+                  signIn().catch(err => console.error("Profile tab sign in error:", err));
+                  return;
+                }
+                onTabChange(tab.id);
+              }}
+              className={cn(
+                "flex-1 flex flex-col items-center gap-1 transition-all duration-300",
+                activeTab === tab.id ? "text-brand scale-110" : "text-slate-400 hover:text-slate-600"
+              )}
+            >
+              <tab.icon className={cn("w-6 h-6", activeTab === tab.id && "fill-brand/20")} />
+              <span className="text-[10px] uppercase font-black tracking-widest hidden md:block">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="hidden md:flex items-center gap-4 z-50">
+          <UserMenu />
+        </div>
+      </nav>
+      <div className="fixed top-4 right-4 md:hidden flex items-center gap-4 z-50">
+        <UserMenu />
+      </div>
+    </>
   );
 };
 
@@ -414,14 +425,15 @@ const BattleMainView = ({ movies, books, onBattle }: {
 
   if (!battleType) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-0 gap-8 p-6 overflow-y-auto">
-        <div className="text-center space-y-2">
-          <h2 className="text-5xl md:text-7xl font-display tracking-tighter uppercase leading-[0.85]">Выберите<br />битву</h2>
-          <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">Что вы хотите сравнить сегодня?</p>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl">
-          <motion.button
+      <div className="h-full min-h-0 overflow-y-auto p-6">
+        <div className="flex flex-col items-center justify-center min-h-full gap-8 w-full max-w-3xl mx-auto py-12">
+          <div className="text-center space-y-2">
+            <h2 className="text-5xl md:text-7xl font-display tracking-tighter uppercase leading-[0.85]">Выберите<br />битву</h2>
+            <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">Что вы хотите сравнить сегодня?</p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
+            <motion.button
             whileHover={{ scale: 1.02, y: -4 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => setBattleType('movies')}
@@ -458,8 +470,9 @@ const BattleMainView = ({ movies, books, onBattle }: {
           </motion.button>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="h-full relative">
@@ -961,7 +974,7 @@ const ChatView = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-full p-6 pb-32">
+    <div className="max-w-2xl mx-auto flex flex-col h-full p-6 pb-40">
       <div className="flex items-center gap-4 mb-8">
         <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center shadow-lg shadow-brand/20">
           <MessageSquare className="w-8 h-8 text-white" />
@@ -1509,7 +1522,7 @@ const ProfileView = ({
   const displayUser = userData || (isCurrentUser ? auth.currentUser : null);
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 pb-24 h-full overflow-y-auto">
+    <div className="max-w-2xl mx-auto py-8 px-4 pb-32 h-full overflow-y-auto">
       <div className="flex items-center gap-6 mb-8">
         {onBack && (
           <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
@@ -2184,7 +2197,7 @@ function AppContent() {
   }
 
   return (
-    <div className="h-screen bg-gray-50 pb-24 md:pt-20 overflow-hidden flex flex-col">
+    <div className="h-screen bg-gray-50 pb-32 md:pt-20 overflow-hidden flex flex-col">
       <Navbar 
         activeTab={activeTab} 
         onTabChange={(tab: string) => {
