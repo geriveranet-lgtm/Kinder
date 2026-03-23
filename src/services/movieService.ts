@@ -47,6 +47,7 @@ export interface UserProfile {
   totalLikesReceived?: number;
   totalCommentsReceived?: number;
   totalCommentLikesReceived?: number;
+  totalReviews?: number;
 }
 
 export interface Movie {
@@ -343,6 +344,23 @@ export const MovieService = {
     }
   },
 
+  toggleLike: async (contentId: string, contentType: 'movie' | 'book', userId: string, isLiked: boolean) => {
+    const userField = contentType === 'movie' ? 'likedMovies' : 'likedBooks';
+    const collectionName = contentType === 'movie' ? 'movies' : 'books';
+    try {
+      await setDoc(doc(db, 'users', userId), {
+        [userField]: isLiked ? arrayUnion(contentId) : arrayRemove(contentId)
+      }, { merge: true });
+      
+      const contentRef = doc(db, collectionName, contentId);
+      await updateDoc(contentRef, {
+        swipeLikes: increment(isLiked ? 1 : -1)
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'users/content');
+    }
+  },
+
   toggleFavorite: async (contentId: string, contentType: 'movie' | 'book', userId: string, isFavorite: boolean) => {
     const userField = contentType === 'movie' ? 'favoriteMovies' : 'favoriteBooks';
     try {
@@ -446,7 +464,110 @@ export const MovieService = {
     }
   },
 
-  updateMemberRole: async (clubId: string, userId: string, role: 'admin' | 'moderator' | 'member') => {
+  getCurrentUserId: () => {
+    return auth.currentUser?.uid;
+  },
+
+  updatePresence: async (userId: string, isOnline: boolean) => {
+    const userRef = doc(db, 'users', userId);
+    try {
+      await setDoc(userRef, {
+        isOnline,
+        lastSeen: serverTimestamp()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error updating presence:', error);
+    }
+  },
+
+  getUsersPresence: (userIds: string[], callback: (presence: Record<string, any>) => void) => {
+    if (userIds.length === 0) return () => {};
+    
+    // Firestore 'in' query is limited to 10 items, but for now we'll just listen to all users
+    // In a real app, we'd chunk this or use a different strategy
+    const q = query(collection(db, 'users'), where('__name__', 'in', userIds.slice(0, 10)));
+    return onSnapshot(q, (snapshot) => {
+      const presence: Record<string, any> = {};
+      snapshot.docs.forEach(doc => {
+        presence[doc.id] = doc.data();
+      });
+      callback(presence);
+    });
+  },
+
+  getUserTitle: (reviewCount: number) => {
+    if (reviewCount >= 500) return 'Легендарный летописец';
+    if (reviewCount >= 250) return 'Платиновый оракул';
+    if (reviewCount >= 100) return 'Золотой маэстро';
+    if (reviewCount >= 50) return 'Серебряный эксперт';
+    if (reviewCount >= 25) return 'Бронзовый критик';
+    if (reviewCount >= 10) return 'Бумажный рецензент';
+    return 'Новичок';
+  },
+
+  getTitleColor: (title: string) => {
+    switch (title) {
+      case 'Легендарный летописец': return 'text-red-600 bg-red-50';
+      case 'Платиновый оракул': return 'text-blue-600 bg-blue-50';
+      case 'Золотой маэстро': return 'text-amber-600 bg-amber-50';
+      case 'Серебряный эксперт': return 'text-gray-600 bg-gray-50';
+      case 'Бронзовый критик': return 'text-orange-600 bg-orange-50';
+      case 'Бумажный рецензент': return 'text-stone-600 bg-stone-50';
+      default: return 'text-gray-400 bg-gray-50';
+    }
+  },
+
+  joinClub: async (clubId: string) => {
+    if (!auth.currentUser) return;
+    const clubRef = doc(db, 'clubs', clubId);
+    const clubSnap = await getDoc(clubRef);
+    if (!clubSnap.exists()) return;
+    
+    const clubData = clubSnap.data();
+    const isAlreadyMember = clubData.members.some((m: any) => m.userId === auth.currentUser?.uid);
+    if (isAlreadyMember) return;
+    
+    const newMember = {
+      userId: auth.currentUser.uid,
+      role: 'member',
+      joinedAt: new Date().toISOString()
+    };
+    
+    try {
+      await updateDoc(clubRef, {
+        members: [...clubData.members, newMember]
+      });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'clubs');
+    }
+  },
+
+  getClubMembers: (clubId: string, callback: (members: any[]) => void) => {
+    const clubRef = doc(db, 'clubs', clubId);
+    return onSnapshot(clubRef, async (snapshot) => {
+      if (!snapshot.exists()) return;
+      const clubData = snapshot.data();
+      const memberIds = clubData.members.map((m: any) => m.userId);
+      
+      // Fetch user details for each member
+      const usersSnap = await getDocs(query(collection(db, 'users'), where('__name__', 'in', memberIds.slice(0, 10))));
+      const userDetails: Record<string, any> = {};
+      usersSnap.docs.forEach(doc => {
+        userDetails[doc.id] = doc.data();
+      });
+      
+      const fullMembers = clubData.members.map((m: any) => ({
+        ...m,
+        ...userDetails[m.userId],
+        displayName: userDetails[m.userId]?.displayName || 'Anonymous',
+        photoURL: userDetails[m.userId]?.photoURL || null
+      }));
+      
+      callback(fullMembers);
+    });
+  },
+
+  updateMemberRole: async (clubId: string, userId: string, role: 'admin' | 'editor' | 'member') => {
     const clubRef = doc(db, 'clubs', clubId);
     const clubSnap = await getDoc(clubRef);
     if (!clubSnap.exists()) return;
@@ -1554,5 +1675,10 @@ export const MovieService = {
     } finally {
       isSeeding = false;
     }
+  },
+
+  updateClubRules: async (clubId: string, rules: string) => {
+    const clubRef = doc(db, 'clubs', clubId);
+    await updateDoc(clubRef, { rules });
   }
 };

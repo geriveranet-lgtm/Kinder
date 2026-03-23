@@ -20,6 +20,7 @@ import {
   RefreshCw,
   RotateCcw,
   ChevronLeft,
+  Award,
   BookOpen,
   Plus,
   Database,
@@ -37,7 +38,6 @@ import { GeminiService } from './services/geminiService';
 import { CommunityView } from './components/CommunityView';
 import { ReviewsView } from './components/ReviewsView';
 import { ClubDetailView } from './components/ClubDetailView';
-import { SuggestionsView } from './components/SuggestionsView';
 import { AdminSeeder } from './components/AdminSeeder';
 import { ImageValidator } from './components/ImageValidator';
 
@@ -53,7 +53,7 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
   <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 md:top-0 md:bottom-auto md:px-12">
     <div className="hidden md:flex items-center gap-2 font-bold text-xl text-indigo-600">
       <Trophy className="w-6 h-6" />
-      <span>КиноТиндер</span>
+      <span>Киндер</span>
     </div>
     <div className="flex justify-around w-full md:w-auto md:gap-8">
       {[
@@ -1081,6 +1081,8 @@ const ContentDetails = ({
   onSelect,
   isFavorite,
   onToggleFavorite,
+  isLiked,
+  onToggleLike,
   onUserClick
 }: { 
   content: Content, 
@@ -1088,6 +1090,8 @@ const ContentDetails = ({
   onSelect: (item: Content) => void,
   isFavorite: boolean,
   onToggleFavorite: (isFav: boolean) => void,
+  isLiked: boolean,
+  onToggleLike: (isLiked: boolean) => void,
   onUserClick: (userId: string) => void
 }) => {
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -1205,8 +1209,14 @@ const ContentDetails = ({
             <Bookmark className={cn("w-5 h-5", isFavorite ? "fill-white" : "")} />
           </button>
           <button 
-            onClick={(e) => { e.stopPropagation(); setShowCollectionPicker(!showCollectionPicker); }}
+            onClick={(e) => { e.stopPropagation(); onToggleLike(!isLiked); }}
             className="absolute top-4 right-28 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors"
+          >
+            <Heart className={cn("w-5 h-5", isLiked ? "fill-red-500 text-red-500" : "")} />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); setShowCollectionPicker(!showCollectionPicker); }}
+            className="absolute top-4 right-40 w-10 h-10 bg-black/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-black/40 transition-colors"
           >
             <Plus className="w-5 h-5" />
           </button>
@@ -1564,7 +1574,7 @@ const ProfileView = ({
 }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [userData, setUserData] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'liked' | 'battles' | 'reviews' | 'comments' | 'collections' | 'favorites' | 'chat'>('overview');
+  const [activeTab, setActiveTab] = useState<'liked' | 'reviews' | 'comments' | 'collections' | 'chat'>('liked');
   const [contentType, setContentType] = useState<'movie' | 'book'>('movie');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -1742,7 +1752,16 @@ const ProfileView = ({
           )}
         </div>
         <div className="flex-1">
-          <h2 className="text-3xl font-black tracking-tight">{displayUser?.displayName || 'Пользователь'}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            <h2 className="text-3xl font-black tracking-tight">{displayUser?.displayName || 'Пользователь'}</h2>
+            <span className={cn(
+              "text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1",
+              MovieService.getTitleColor(MovieService.getUserTitle(reviews.length))
+            )}>
+              <Award className="w-3 h-3" />
+              {MovieService.getUserTitle(reviews.length)}
+            </span>
+          </div>
           <p className="text-gray-500 font-medium">{displayUser?.email}</p>
           {isCurrentUser && <p className="text-xs text-indigo-600 mt-1 font-bold">Это ваш профиль</p>}
           
@@ -1828,13 +1847,10 @@ const ProfileView = ({
 
       <div className="flex overflow-x-auto gap-2 mb-6 no-scrollbar">
         {[
-          { id: 'overview', label: 'Обзор', icon: User },
-          { id: 'liked', label: 'Понравилось', icon: Heart },
-          { id: 'favorites', label: 'Избранное', icon: Bookmark },
+          { id: 'liked', label: 'Понравившееся', icon: Heart },
           { id: 'collections', label: 'Коллекции', icon: BookOpen },
-          { id: 'battles', label: 'Битвы', icon: Swords },
-          { id: 'reviews', label: 'Отзывы', icon: Star },
-          { id: 'comments', label: 'Комменты', icon: MessageSquare },
+          { id: 'reviews', label: 'Рецензии', icon: Star },
+          { id: 'comments', label: 'Комментарии', icon: MessageSquare },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -1851,107 +1867,6 @@ const ProfileView = ({
           </button>
         ))}
       </div>
-
-      {activeTab === 'overview' && (
-        <div className="space-y-8">
-          {/* Recent Reviews */}
-          {reviews.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">Последние отзывы</h3>
-                <button 
-                  onClick={() => setActiveTab('reviews')}
-                  className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
-                >
-                  Все отзывы
-                </button>
-              </div>
-              <div className="grid gap-4">
-                {reviews.slice(0, 3).map(r => {
-                  const item = r.contentType === 'movie' ? allMovies.find(m => m.id === r.contentId) : allBooks.find(b => b.id === r.contentId);
-                  if (!item) return null;
-                  return (
-                    <div key={r.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex gap-4 cursor-pointer hover:shadow-md transition-all" onClick={() => onSelectItem(item)}>
-                      <img src={item.posterUrl} alt={item.title} className="w-16 h-24 object-cover rounded-lg shadow-sm" />
-                      <div className="flex-1">
-                        <h4 className="font-bold text-lg leading-tight mb-1">{item.title}</h4>
-                        <div className="flex items-center gap-1 mb-2">
-                          {[1, 2, 3, 4, 5].map(star => (
-                            <Star key={star} className={cn("w-3 h-3", star <= r.rating ? "text-amber-400 fill-amber-400" : "text-gray-300")} />
-                          ))}
-                        </div>
-                        <p className="text-sm text-gray-600 line-clamp-2">{r.comment}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
-          {/* Collections */}
-          {collections.length > 0 && (
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">Коллекции</h3>
-                <button 
-                  onClick={() => setActiveTab('collections')}
-                  className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
-                >
-                  Все коллекции
-                </button>
-              </div>
-              <div className="grid gap-4">
-                {collections.slice(0, 2).map(c => (
-                  <div key={c.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm cursor-pointer hover:shadow-md transition-all" onClick={() => setActiveTab('collections')}>
-                    <h4 className="font-bold text-lg mb-1">{c.name}</h4>
-                    <p className="text-sm text-gray-500 mb-3">{c.description}</p>
-                    <div className="flex gap-2">
-                      {c.items.slice(0, 4).map((item, idx) => {
-                        const contentItem = item.type === 'movie' ? allMovies.find(m => m.id === item.id) : allBooks.find(b => b.id === item.id);
-                        if (!contentItem) return null;
-                        return (
-                          <img key={idx} src={contentItem.posterUrl} alt={contentItem.title} className="w-10 h-14 object-cover rounded-md shadow-sm" />
-                        );
-                      })}
-                      {c.items.length > 4 && (
-                        <div className="w-10 h-14 bg-gray-100 rounded-md flex items-center justify-center text-xs font-bold text-gray-500">
-                          +{c.items.length - 4}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Favorites */}
-          {(favoriteMovies.length > 0 || favoriteBooks.length > 0) && (
-            <section>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold">Избранное</h3>
-                <button 
-                  onClick={() => setActiveTab('favorites')}
-                  className="text-sm font-bold text-indigo-600 hover:text-indigo-700"
-                >
-                  Все избранное
-                </button>
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-                {[...favoriteMovies, ...favoriteBooks].slice(0, 5).map(item => (
-                  <div key={item.id} className="w-24 shrink-0 cursor-pointer group" onClick={() => onSelectItem(item)}>
-                    <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-sm mb-2 group-hover:shadow-md transition-all">
-                      <img src={item.posterUrl} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                    </div>
-                    <h4 className="text-xs font-bold line-clamp-2 leading-tight">{item.title}</h4>
-                  </div>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-      )}
 
       {activeTab === 'liked' && (
         <>
@@ -2067,89 +1982,6 @@ const ProfileView = ({
         </div>
       )}
 
-      {activeTab === 'favorites' && (
-        <>
-          <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-2xl w-fit">
-            <button 
-              onClick={() => setContentType('movie')} 
-              className={cn("px-6 py-2 rounded-xl font-bold text-xs transition-all", contentType === 'movie' ? "bg-white shadow-sm text-indigo-600" : "text-gray-500")}
-            >
-              Фильмы
-            </button>
-            <button 
-              onClick={() => setContentType('book')} 
-              className={cn("px-6 py-2 rounded-xl font-bold text-xs transition-all", contentType === 'book' ? "bg-white shadow-sm text-emerald-600" : "text-gray-500")}
-            >
-              Книги
-            </button>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {favoriteItems.slice(0, displayLimit).map(item => (
-              <div key={item.id} onClick={() => onSelectItem(item)} className="cursor-pointer group">
-                <div className="aspect-[2/3] rounded-2xl overflow-hidden mb-2 relative shadow-sm group-hover:shadow-md transition-all">
-                  <img src={item.posterUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e) => { e.currentTarget.src = item.type === 'movie' ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }} />
-                  <div className="absolute top-2 right-2 bg-white/90 p-1.5 rounded-full shadow-sm">
-                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                  </div>
-                </div>
-                <h3 className="font-bold text-sm line-clamp-1 group-hover:text-indigo-600 transition-colors">{item.title}</h3>
-              </div>
-            ))}
-          </div>
-          {favoriteItems.length > displayLimit && (
-            <button 
-              onClick={() => setDisplayLimit(prev => prev + 10)}
-              className="w-full mt-8 py-3 bg-white border border-gray-200 rounded-2xl font-bold text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Смотреть больше
-            </button>
-          )}
-          {favoriteCollections.length > 0 && (
-            <div className="col-span-full mt-8">
-              <h3 className="text-lg font-bold mb-4">Избранные коллекции</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {favoriteCollections.map(col => (
-                  <div key={col.id} className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all group relative">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); handleToggleFavoriteCollection(col.id); }}
-                      className="absolute top-4 right-4 p-2 bg-pink-50 text-pink-500 rounded-full hover:bg-pink-100 transition-colors z-10"
-                    >
-                      <Heart className="w-4 h-4 fill-pink-500" />
-                    </button>
-                    <h4 className="font-black text-lg group-hover:text-indigo-600 transition-colors mb-1 pr-10">{col.name}</h4>
-                    <p className="text-xs text-gray-500 mb-4 line-clamp-2">{col.description}</p>
-                    <div className="flex -space-x-3 mb-4">
-                      {col.items.slice(0, 4).map((item, i) => {
-                        const content = [...allMovies, ...allBooks].find(c => c.id === item.id);
-                        return content ? (
-                          <img key={i} src={content.posterUrl} className="w-10 h-14 object-cover rounded-lg border-2 border-white shadow-sm" />
-                        ) : null;
-                      })}
-                      {col.items.length > 4 && (
-                        <div className="w-10 h-14 bg-gray-100 rounded-lg border-2 border-white shadow-sm flex items-center justify-center text-[10px] font-bold text-gray-400">
-                          +{col.items.length - 4}
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                      <span>{col.items.length} предметов</span>
-                      <span>от {col.userName}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          {(favoriteItems.length === 0 && favoriteCollections.length === 0) && (
-            <div className="col-span-full text-center text-gray-500 py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-              <Bookmark className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <p>В избранном пока ничего нет</p>
-            </div>
-          )}
-        </>
-      )}
-
       {activeTab === 'collections' && (
         <div className="space-y-6">
           {isCurrentUser && (
@@ -2220,67 +2052,44 @@ const ProfileView = ({
         </div>
       )}
 
-      {activeTab === 'battles' && (
-        <div className="space-y-4">
-          {battles.map((battle, i) => {
-            const itemA = [...allMovies, ...allBooks].find(item => item.id === battle.itemAId);
-            const itemB = [...allMovies, ...allBooks].find(item => item.id === battle.itemBId);
-            const winner = battle.winnerId === battle.itemAId ? itemA : itemB;
-            
-            if (!itemA || !itemB) return null;
-
-            return (
-              <div key={i} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-                <div className="flex -space-x-4">
-                  <img src={itemA.posterUrl} className="w-12 h-16 object-cover rounded-lg border-2 border-white shadow-sm" />
-                  <img src={itemB.posterUrl} className="w-12 h-16 object-cover rounded-lg border-2 border-white shadow-sm" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                      {battle.contentType === 'movie' ? 'Фильмы' : 'Книги'}
-                    </span>
-                    <span className="text-[10px] text-gray-400">
-                      {battle.timestamp?.toDate ? battle.timestamp.toDate().toLocaleDateString() : 'Недавно'}
-                    </span>
-                  </div>
-                  <p className="text-sm font-bold truncate">
-                    {itemA.title} <span className="text-gray-400 font-normal mx-1">vs</span> {itemB.title}
-                  </p>
-                  <p className="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1">
-                    <Trophy className="w-3 h-3" />
-                    Победитель: {winner?.title}
-                  </p>
-                </div>
-              </div>
-            );
-          })}
-          {battles.length === 0 && (
-            <div className="text-center text-gray-500 py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
-              <Swords className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-              <p>Битв пока не было</p>
-            </div>
-          )}
-        </div>
-      )}
-
       {activeTab === 'reviews' && (
         <div className="space-y-4">
           {reviews.map((review) => {
             const item = [...allMovies, ...allBooks].find(i => i.id === review.contentId);
             return (
               <div key={review.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                <div className="flex items-center gap-3 mb-3">
-                  <img src={item?.posterUrl} className="w-10 h-14 object-cover rounded-lg shadow-sm" />
-                  <div>
-                    <h4 className="font-bold text-sm">{item?.title}</h4>
-                    <div className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                      <span className="text-xs font-bold">{review.rating}</span>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <img src={item?.posterUrl} className="w-10 h-14 object-cover rounded-lg shadow-sm" />
+                    <div>
+                      <h4 className="font-bold text-sm">{item?.title}</h4>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                        <span className="text-xs font-bold">{review.rating}</span>
+                      </div>
                     </div>
                   </div>
+                  <button 
+                    onClick={() => MovieService.likeReview(review.id, review.userId)}
+                    className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-pink-500 transition-colors"
+                  >
+                    <Heart className="w-3 h-3" />
+                    <span>{(review as any).likes || 0}</span>
+                  </button>
                 </div>
-                <p className="text-sm text-gray-700 italic">"{review.comment}"</p>
+                <p className="text-sm text-gray-700 italic mb-3">"{review.comment}"</p>
+                <div className="border-t border-gray-50 pt-3">
+                  <button 
+                    onClick={() => {
+                      const text = prompt('Ваш комментарий к отзыву:');
+                      if (text && item) MovieService.addComment(item.id, item.type, text, review.id, review.userId);
+                    }}
+                    className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-indigo-600 transition-colors uppercase tracking-wider"
+                  >
+                    <MessageSquare className="w-3 h-3" />
+                    <span>{(review as any).commentCount || 0} комментов</span>
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -2299,9 +2108,18 @@ const ProfileView = ({
             const item = [...allMovies, ...allBooks].find(i => i.id === comment.contentId);
             return (
               <div key={comment.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                <div className="flex items-center gap-2 mb-2">
-                  <MessageSquare className="w-3 h-3 text-indigo-600" />
-                  <span className="text-xs font-bold text-gray-400">{item?.title}</span>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="w-3 h-3 text-indigo-600" />
+                    <span className="text-xs font-bold text-gray-400">{item?.title}</span>
+                  </div>
+                  <button 
+                    onClick={() => MovieService.likeComment(comment.id, comment.userId)}
+                    className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-pink-500 transition-colors"
+                  >
+                    <Heart className="w-3 h-3" />
+                    {comment.likes || 0}
+                  </button>
                 </div>
                 <p className="text-sm text-gray-700">{comment.text}</p>
                 <p className="text-[10px] text-gray-400 mt-2">
@@ -2392,6 +2210,35 @@ function AppContent() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [selectedClub, setSelectedClub] = useState<any>(null);
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    
+    // Set online status
+    MovieService.updatePresence(user.uid, true);
+    
+    // Update presence every 2 minutes as a heartbeat
+    const interval = setInterval(() => {
+      MovieService.updatePresence(user.uid, true);
+    }, 120000);
+    
+    // Set offline status on unmount
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        MovieService.updatePresence(user.uid, false);
+      } else {
+        MovieService.updatePresence(user.uid, true);
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      MovieService.updatePresence(user.uid, false);
+    };
+  }, [user?.uid]);
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [email, setEmail] = useState('');
@@ -2438,8 +2285,13 @@ function AppContent() {
           })
           .catch((err) => {
             console.error("Email link sign in error:", err);
-            if (err.code !== 'auth/invalid-action-code') {
-              alert("Ошибка при входе по ссылке.");
+            if (err.code === 'auth/expired-action-code') {
+              alert("Ошибка: Ссылка для входа истекла. Пожалуйста, запросите новую.");
+            } else if (err.code === 'auth/invalid-action-code') {
+              // This can happen if the link was already used or tampered with
+              console.warn("Invalid action code - link might be expired or already used");
+            } else {
+              alert(`Ошибка при входе по ссылке: ${err.message || err}\n\nКод ошибки: ${err.code || 'unknown'}`);
             }
           })
           .finally(() => {
@@ -2568,50 +2420,31 @@ function AppContent() {
                 movies={movies} 
                 books={books} 
                 onAddContent={() => console.log('Add content modal')}
+                onContentClick={(content) => setSelectedContent(content)}
               />
             )}
             {activeTab === 'community' && !selectedClub && (
               <CommunityView onSelectClub={setSelectedClub} />
             )}
             {activeTab === 'users' && !selectedClub && (
-              <>
-                <RankingView 
-                  movies={movies} 
-                  books={books}
-                  onSelect={(item: any) => {
-                    if (item.type === 'user') {
-                      handleUserClick(item.id || item.uid);
-                    } else {
-                      setSelectedContent(item);
-                    }
-                  }} 
-                  isAdmin={isAdmin}
-                  onSync={handleSync}
-                  isSyncing={isSyncing}
-                  defaultContentType="movie"
-                />
-                <RankingView 
-                  movies={movies} 
-                  books={books}
-                  onSelect={(item: any) => {
-                    if (item.type === 'user') {
-                      handleUserClick(item.id || item.uid);
-                    } else {
-                      setSelectedContent(item);
-                    }
-                  }} 
-                  isAdmin={isAdmin}
-                  onSync={handleSync}
-                  isSyncing={isSyncing}
-                  defaultContentType="user"
-                />
-              </>
+              <RankingView 
+                movies={movies} 
+                books={books}
+                onSelect={(item: any) => {
+                  if (item.type === 'user') {
+                    handleUserClick(item.id || item.uid);
+                  } else {
+                    setSelectedContent(item);
+                  }
+                }} 
+                isAdmin={isAdmin}
+                onSync={handleSync}
+                isSyncing={isSyncing}
+                defaultContentType="movie"
+              />
             )}
             {selectedClub && (
               <ClubDetailView club={selectedClub} onClose={() => setSelectedClub(null)} />
-            )}
-            {activeTab === 'suggestions' && (
-              <SuggestionsView movies={movies} books={books} />
             )}
             {activeTab === 'battle' && (
               <BattleMainView movies={movies} books={books} onBattle={handleBattle} />
@@ -2666,6 +2499,19 @@ function AppContent() {
               }
               MovieService.toggleFavorite(selectedContent.id, selectedContent.type, user.uid, isFav);
             }}
+            isLiked={
+              selectedContent.type === 'movie' 
+                ? userProfile?.likedMovies?.includes(selectedContent.id) || false
+                : userProfile?.likedBooks?.includes(selectedContent.id) || false
+            }
+            onToggleLike={(isLiked) => {
+              if (!user) {
+                console.log("Toggle like attempted, but no user. Calling signIn...");
+                signIn().catch(err => console.error("Toggle like sign in error:", err));
+                return;
+              }
+              MovieService.toggleLike(selectedContent.id, selectedContent.type, user.uid, isLiked);
+            }}
             onUserClick={handleUserClick}
           />
         )}
@@ -2705,18 +2551,40 @@ function AppContent() {
                 <button 
                   onClick={async () => {
                     if (!email.trim() || isSendingLink) return;
+                    
+                    // Basic email validation
+                    if (!email.includes('@') || !email.includes('.')) {
+                      alert("Пожалуйста, введите корректный адрес электронной почты.");
+                      return;
+                    }
+
                     setIsSendingLink(true);
                     try {
                       const actionCodeSettings = {
-                        url: window.location.href,
+                        // Use origin + pathname to ensure a clean URL for the redirect
+                        url: window.location.origin + window.location.pathname,
                         handleCodeInApp: true,
                       };
-                      await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-                      window.localStorage.setItem('emailForSignIn', email);
+                      
+                      console.log("Sending sign-in link to:", email.trim());
+                      console.log("Redirect URL:", actionCodeSettings.url);
+                      
+                      await sendSignInLinkToEmail(auth, email.trim(), actionCodeSettings);
+                      window.localStorage.setItem('emailForSignIn', email.trim());
                       setIsEmailLinkSent(true);
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error("Email link error:", err);
-                      alert("Ошибка при отправке ссылки на почту.");
+                      if (err.code === 'auth/unauthorized-domain') {
+                        alert(`Ошибка: Домен не авторизован.\n\nПожалуйста, добавьте "${window.location.hostname}" в список разрешенных доменов в Firebase Console (Authentication -> Settings -> Authorized domains).`);
+                      } else if (err.code === 'auth/operation-not-allowed') {
+                        alert("Ошибка: Вход по ссылке (Email Link) не включен в Firebase.\n\nПерейдите в Firebase Console -> Authentication -> Sign-in method -> Email/Password и включите 'Email link (passwordless sign-in)'.");
+                      } else if (err.code === 'auth/invalid-email') {
+                        alert("Ошибка: Некорректный адрес электронной почты.");
+                      } else if (err.code === 'auth/too-many-requests') {
+                        alert("Ошибка: Слишком много запросов. Пожалуйста, попробуйте позже.");
+                      } else {
+                        alert(`Ошибка при отправке ссылки: ${err.message || err}\n\nКод ошибки: ${err.code || 'unknown'}`);
+                      }
                     } finally {
                       setIsSendingLink(false);
                     }
@@ -2729,7 +2597,16 @@ function AppContent() {
                 </button>
               </div>
             ) : (
-              <p className="text-indigo-600 font-bold">Ссылка для входа отправлена на {email}!</p>
+              <div className="space-y-4">
+                <p className="text-indigo-600 font-bold">Ссылка для входа отправлена на {email}!</p>
+                <p className="text-gray-500 text-sm">Проверьте папку "Спам", если письмо не пришло.</p>
+                <button 
+                  onClick={() => setIsEmailLinkSent(false)}
+                  className="text-indigo-600 font-bold text-sm hover:underline"
+                >
+                  Попробовать другой email или отправить снова
+                </button>
+              </div>
             )}
           </div>
         </div>

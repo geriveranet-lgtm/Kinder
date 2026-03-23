@@ -1,1 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  --font-display: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-surface: #f8f9ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f0f4ff;
+  --color-surface-container: #e7eefb;
+  --color-surface-container-high: #dbe6f9;
+  --color-on-surface: #151c25;
+  
+  --color-primary: #4f46e5;
+  --color-primary-container: #818cf8;
+  --color-on-primary: #ffffff;
+  
+  --color-secondary: #10b981;
+  --color-on-secondary: #ffffff;
+
+  --radius-xl: 1.5rem;
+  --radius-2xl: 2rem;
+  --radius-3xl: 3rem;
+}
+
+@layer base {
+  body {
+    @apply bg-surface text-on-surface font-sans antialiased;
+    line-height: 1.5;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-tight;
+    line-height: 1.4;
+  }
+}
+
+.glass {
+  @apply bg-surface/70 backdrop-blur-xl;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-primary to-primary-container text-on-primary rounded-3xl px-6 py-3 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/10;
+}
+
+.btn-secondary {
+  @apply bg-surface-container-high text-primary rounded-3xl px-6 py-3 font-bold transition-all hover:bg-surface-container;
+}
+
+.card-editorial {
+  @apply bg-surface-container-lowest rounded-2xl p-6 transition-all;
+}
+
+.spacing-6 {
+  @apply p-8;
+}
