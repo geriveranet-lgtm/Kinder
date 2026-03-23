@@ -50,8 +50,8 @@ function cn(...inputs: ClassValue[]) {
 
 const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
   return (
-  <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center z-50 md:top-0 md:bottom-auto md:px-12">
-    <div className="hidden md:flex items-center gap-2 font-bold text-xl text-indigo-600">
+  <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg glass rounded-3xl px-6 py-3 flex justify-between items-center z-50 md:top-6 md:bottom-auto md:px-12">
+    <div className="hidden md:flex items-center gap-2 font-display text-2xl text-brand uppercase tracking-tighter">
       <Trophy className="w-6 h-6" />
       <span>Киндер</span>
     </div>
@@ -67,32 +67,31 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
           key={tab.id}
           onClick={() => {
             if (tab.id === 'profile' && !user) {
-              console.log("Profile tab clicked, but no user. Calling signIn...");
               signIn().catch(err => console.error("Profile tab sign in error:", err));
               return;
             }
             onTabChange(tab.id);
           }}
           className={cn(
-            "flex-1 flex flex-col items-center gap-1 transition-colors",
-            activeTab === tab.id ? "text-indigo-600" : "text-gray-400 hover:text-gray-600"
+            "flex-1 flex flex-col items-center gap-1 transition-all duration-300",
+            activeTab === tab.id ? "text-brand scale-110" : "text-slate-400 hover:text-slate-600"
           )}
         >
-          <tab.icon className="w-6 h-6" />
-          <span className="text-[10px] uppercase font-bold tracking-wider hidden md:block">{tab.label}</span>
+          <tab.icon className={cn("w-6 h-6", activeTab === tab.id && "fill-brand/20")} />
+          <span className="text-[10px] uppercase font-black tracking-widest hidden md:block">{tab.label}</span>
         </button>
       ))}
     </div>
     <div className="fixed top-4 right-4 md:static flex items-center gap-4 z-50">
       {user ? (
-        <div className="flex items-center gap-3 bg-white/80 md:bg-transparent backdrop-blur-md md:backdrop-blur-none px-3 py-2 md:p-0 rounded-full md:rounded-none shadow-sm md:shadow-none border border-gray-200 md:border-none">
+        <div className="flex items-center gap-3 bg-white/80 md:bg-transparent backdrop-blur-md md:backdrop-blur-none px-3 py-2 md:p-0 rounded-full md:rounded-none shadow-sm md:shadow-none border border-slate-200 md:border-none">
           {user.email === "geriveranet@gmail.com" && (
             <button 
               onClick={onSync}
               disabled={isSyncing}
               className={cn(
-                "text-xs px-2 py-1 rounded-md font-medium transition-colors flex items-center gap-1",
-                isSyncing ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+                "text-[10px] uppercase tracking-widest px-2 py-1 rounded-md font-black transition-colors flex items-center gap-1",
+                isSyncing ? "bg-slate-100 text-slate-500 cursor-not-allowed" : "bg-brand/10 text-brand hover:bg-brand/20"
               )}
               title="Sync Movies"
             >
@@ -102,14 +101,14 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
           )}
           <button onClick={() => onTabChange('profile')} className="focus:outline-none">
             {user.photoURL ? (
-              <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border border-gray-200 hover:ring-2 hover:ring-indigo-500 transition-all object-cover" />
+              <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full border-2 border-white ring-1 ring-slate-200 hover:ring-brand transition-all object-cover" />
             ) : (
-              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 border border-gray-200 hover:ring-2 hover:ring-indigo-500 transition-all">
+              <div className="w-8 h-8 rounded-full bg-brand/10 flex items-center justify-center text-brand border-2 border-white ring-1 ring-slate-200 hover:ring-brand transition-all">
                 <User className="w-4 h-4" />
               </div>
             )}
           </button>
-          <button onClick={logOut} className="text-gray-500 hover:text-red-500 transition-colors">
+          <button onClick={logOut} className="text-slate-400 hover:text-rose-500 transition-colors">
             <LogOut className="w-5 h-5" />
           </button>
         </div>
@@ -117,14 +116,12 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
         <button 
           onClick={async () => {
             try {
-              console.log("Navbar sign in button clicked");
               await signIn();
-              console.log("Navbar sign in call finished");
             } catch (err) {
               console.error("Navbar sign in error:", err);
             }
           }} 
-          className="bg-indigo-600 text-white px-4 py-2 rounded-full md:rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm md:shadow-none"
+          className="bg-brand text-white px-5 py-2 rounded-full font-black text-xs uppercase tracking-widest hover:bg-brand-dark transition-all shadow-lg shadow-brand/20 active:scale-95"
         >
           Войти
         </button>
@@ -171,7 +168,7 @@ const SwipeCard = ({ item, onSwipe }: { item: Content, onSwipe: (dir: 'like' | '
       transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       className="absolute inset-0 cursor-grab active:cursor-grabbing"
     >
-      <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-gray-900">
+      <div className="relative w-full h-full rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/20 bg-slate-900">
         <img 
           src={isMovie ? movie?.posterUrl : book?.posterUrl} 
           alt={item.title} 
@@ -183,54 +180,56 @@ const SwipeCard = ({ item, onSwipe }: { item: Content, onSwipe: (dir: 'like' | '
         {/* Feedback Overlays */}
         <motion.div 
           style={{ opacity: opacityLike }}
-          className="absolute top-10 left-10 border-4 border-green-500 rounded-xl px-4 py-2 rotate-[-20deg] pointer-events-none z-10"
+          className="absolute top-10 left-10 border-4 border-emerald-500 rounded-2xl px-6 py-3 rotate-[-15deg] pointer-events-none z-10 bg-emerald-500/10 backdrop-blur-sm"
         >
-          <span className="text-green-500 text-4xl font-black uppercase tracking-widest">ЛАЙК</span>
+          <span className="text-emerald-500 text-5xl font-display uppercase tracking-widest">ЛАЙК</span>
         </motion.div>
 
         <motion.div 
           style={{ opacity: opacityDislike }}
-          className="absolute top-10 right-10 border-4 border-red-500 rounded-xl px-4 py-2 rotate-[20deg] pointer-events-none z-10"
+          className="absolute top-10 right-10 border-4 border-rose-500 rounded-2xl px-6 py-3 rotate-[15deg] pointer-events-none z-10 bg-rose-500/10 backdrop-blur-sm"
         >
-          <span className="text-red-500 text-4xl font-black uppercase tracking-widest">НЕ МОЁ</span>
+          <span className="text-rose-500 text-5xl font-display uppercase tracking-widest">НЕ МОЁ</span>
         </motion.div>
 
         <motion.div 
           style={{ opacity: opacityNotWatched }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 border-4 border-indigo-500 rounded-xl px-4 py-2 pointer-events-none z-10"
+          className="absolute bottom-1/2 left-1/2 -translate-x-1/2 translate-y-1/2 border-4 border-brand rounded-2xl px-6 py-3 pointer-events-none z-10 bg-brand/10 backdrop-blur-sm"
         >
-          <span className="text-indigo-500 text-2xl font-black uppercase tracking-widest text-center block">НЕ СМОТРЕЛ</span>
+          <span className="text-brand text-3xl font-display uppercase tracking-widest text-center block">НЕ СМОТРЕЛ</span>
         </motion.div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
         <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-          <div className="flex flex-wrap gap-2 mb-3">
-            <span className="bg-indigo-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+          <div className="flex flex-wrap gap-2 mb-4">
+            <span className="bg-brand px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">
               {isMovie ? 'Фильм' : 'Книга'}
             </span>
             {item.genre && (
-              <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span className="bg-white/10 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.1em]">
                 {item.genre}
               </span>
             )}
             {(isMovie ? movie?.releaseYear : book?.releaseYear) && (
-              <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+              <span className="bg-white/10 backdrop-blur-md border border-white/10 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.1em]">
                 {isMovie ? movie?.releaseYear : book?.releaseYear}
               </span>
             )}
           </div>
-          <h2 className="text-4xl font-black mb-2 tracking-tight">{item.title}</h2>
+          <h2 className="text-5xl font-display mb-3 tracking-tighter uppercase leading-[0.9]">{item.title}</h2>
           {(isMovie ? movie?.director : book?.author) && (
-            <p className="text-white/60 text-sm mb-3 font-medium">
+            <p className="text-white/50 text-xs mb-4 font-black uppercase tracking-widest">
               {isMovie ? `Режиссер: ${movie?.director}` : `Автор: ${book?.author}`}
             </p>
           )}
-          <div className="flex items-center gap-2 mb-4">
-            <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
-            <span className="font-bold text-lg">{(item.rating || 0).toFixed(1)}</span>
-            <span className="text-white/60 text-sm">({item.totalVotes} голосов)</span>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="flex items-center gap-1.5 bg-yellow-400/20 px-3 py-1 rounded-full border border-yellow-400/30">
+              <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+              <span className="font-black text-yellow-400">{(item.rating || 0).toFixed(1)}</span>
+            </div>
+            <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">({item.totalVotes} голосов)</span>
           </div>
-          <p className="text-white/80 line-clamp-3 text-lg leading-relaxed">{item.description}</p>
+          <p className="text-white/70 line-clamp-3 text-sm leading-relaxed font-medium">{item.description}</p>
         </div>
       </div>
     </motion.div>
@@ -308,83 +307,6 @@ const SwipeView = ({ movies, books, onSwipe }: {
   );
 };
 
-const BattleMainView = ({ movies, books, onBattle }: { 
-  movies: Movie[], 
-  books: Book[],
-  onBattle: (winnerId: string, loserId: string, contentType: 'movie' | 'book') => void 
-}) => {
-  const [battleType, setBattleType] = useState<'movies' | 'books' | null>(null);
-
-  if (!battleType) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full min-h-0 gap-4 p-4 overflow-y-auto">
-        <div className="text-center space-y-1">
-          <h2 className="text-2xl md:text-4xl font-black tracking-tighter uppercase">Выберите битву</h2>
-          <p className="text-gray-500 text-sm">Что вы хотите сравнить сегодня?</p>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setBattleType('movies')}
-            className="group relative h-32 sm:h-64 rounded-[2rem] overflow-hidden shadow-xl bg-indigo-600 text-white"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 to-indigo-800 opacity-90" />
-            <div className="relative h-full flex flex-row items-center justify-start p-6 text-left gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
-                <Swords className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Фильмы</h3>
-                <p className="text-indigo-100 text-xs mt-0.5 font-medium">Лучшие картины</p>
-              </div>
-            </div>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setBattleType('books')}
-            className="group relative h-32 sm:h-64 rounded-[2rem] overflow-hidden shadow-xl bg-emerald-600 text-white"
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-emerald-800 opacity-90" />
-            <div className="relative h-full flex flex-row items-center justify-start p-6 text-left gap-4">
-              <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform shrink-0">
-                <BookOpen className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Книги</h3>
-                <p className="text-emerald-100 text-xs mt-0.5 font-medium">Лучшие произведения</p>
-              </div>
-            </div>
-          </motion.button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="h-full relative">
-      <button 
-        onClick={() => setBattleType(null)}
-        className="absolute top-4 left-4 z-20 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-sm hover:bg-white transition-colors border border-gray-100 flex items-center gap-2 px-3"
-      >
-        <X className="w-4 h-4 text-gray-600" />
-        <span className="text-xs font-bold uppercase tracking-widest text-gray-600">Назад</span>
-      </button>
-      
-      <div className="h-full pt-12 overflow-y-auto min-h-0">
-        {battleType === 'movies' ? (
-          <BattleView items={movies} onBattle={(w, l) => onBattle(w, l, 'movie')} contentType="movie" />
-        ) : (
-          <BattleView items={books} onBattle={(w, l) => onBattle(w, l, 'book')} contentType="book" />
-        )}
-      </div>
-    </div>
-  );
-};
-
 const BattleView = ({ items, onBattle, contentType }: { items: Content[], onBattle: (winnerId: string, loserId: string) => void, contentType: 'movie' | 'book' }) => {
   const [pair, setPair] = useState<[Content, Content] | null>(null);
 
@@ -410,11 +332,11 @@ const BattleView = ({ items, onBattle, contentType }: { items: Content[], onBatt
   if (!pair) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[400px] text-center p-8">
-        <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mb-6">
-          <Swords className="w-10 h-10 text-indigo-600 animate-pulse" />
+        <div className="w-24 h-24 bg-brand/10 rounded-[2.5rem] flex items-center justify-center mb-8 border-2 border-brand/20">
+          <Swords className="w-12 h-12 text-brand animate-pulse" />
         </div>
-        <h2 className="text-2xl font-black mb-2">Загрузка битвы...</h2>
-        <p className="text-gray-500">
+        <h2 className="text-4xl font-display uppercase tracking-tight mb-3">Загрузка...</h2>
+        <p className="text-slate-400 font-medium">
           {items.length < 2 ? `Недостаточно ${contentType === 'movie' ? 'фильмов' : 'книг'} для битвы.` : `Мы подбираем для вас пару ${contentType === 'movie' ? 'фильмов' : 'книг'}.`}
         </p>
       </div>
@@ -422,8 +344,8 @@ const BattleView = ({ items, onBattle, contentType }: { items: Content[], onBatt
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4 p-4 max-w-md mx-auto w-full h-full min-h-0">
-      <div className="flex flex-col gap-4 w-full flex-1 min-h-0 relative">
+    <div className="flex flex-col items-center justify-center gap-8 p-6 max-w-lg mx-auto w-full h-full min-h-0">
+      <div className="flex flex-col gap-6 w-full flex-1 min-h-0 relative">
         {pair.map((item, idx) => {
           const isMovie = item.type === 'movie';
           const movie = isMovie ? item as Movie : null;
@@ -431,51 +353,37 @@ const BattleView = ({ items, onBattle, contentType }: { items: Content[], onBatt
           const posterUrl = isMovie ? movie?.posterUrl : book?.posterUrl;
 
           return (
-            <React.Fragment key={item.id}>
-              {idx === 1 && contentType === 'book' && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-12 h-12 bg-white rounded-full flex items-center justify-center font-bold text-emerald-600 shadow-lg border-4 border-emerald-100">
-                  VS
-                </div>
-              )}
-              <motion.button
+            <motion.button
               key={item.id}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.02, y: idx === 0 ? -4 : 4 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleSelect(item.id)}
-              className="flex-1 relative rounded-2xl overflow-hidden shadow-xl group w-full max-h-[40vh]"
+              className="flex-1 relative rounded-[2.5rem] overflow-hidden shadow-2xl group w-full max-h-[42vh] border-2 border-white/10"
             >
               <img 
                 src={posterUrl} 
                 alt={item.title} 
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 referrerPolicy="no-referrer"
                 onError={(e) => { e.currentTarget.src = isMovie ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 text-white text-left">
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-6 text-white text-left">
                 {item.genre && (
-                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/60 mb-1 block">
+                  <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50 mb-2 block">
                     {item.genre}
                   </span>
                 )}
-                <h3 className="text-xl font-bold mb-1 leading-tight">{item.title}</h3>
+                <h3 className="text-3xl font-display uppercase tracking-tighter mb-2 leading-[0.9]">{item.title}</h3>
                 
-                {((isMovie ? movie?.releaseYear : book?.releaseYear) || (isMovie ? movie?.director : book?.author)) && (
-                  <div className="flex items-center gap-2 text-xs text-white/70 mb-2 font-medium">
-                    {isMovie ? <span>{movie?.releaseYear}</span> : <span>{book?.releaseYear}</span>}
-                    {(isMovie ? movie?.releaseYear : book?.releaseYear) && (isMovie ? movie?.director : book?.author) && <span>•</span>}
-                    {isMovie ? <span>{movie?.director}</span> : <span>{book?.author}</span>}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1.5 bg-yellow-400/20 px-2 py-0.5 rounded-lg border border-yellow-400/30">
+                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                    <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest">{(item.rating || 0).toFixed(1)}</span>
                   </div>
-                )}
-
-                <div className="flex items-center gap-4 text-sm mt-2">
-                  <div className="flex items-center gap-1.5 text-yellow-400">
-                    <Star className="w-4 h-4 fill-yellow-400" />
-                    <span className="font-bold">{(item.rating || 0).toFixed(1)}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-indigo-300">
-                    <Trophy className="w-4 h-4" />
-                    <span className="font-bold">
+                  <div className="flex items-center gap-1.5 bg-brand/20 px-2 py-0.5 rounded-lg border border-brand/30">
+                    <Trophy className="w-3 h-3 text-brand" />
+                    <span className="text-[10px] font-black text-brand uppercase tracking-widest">
                       {((item.battleWins || 0) + (item.battleLosses || 0) > 0 
                         ? Math.round(((item.battleWins || 0) / ((item.battleWins || 0) + (item.battleLosses || 0))) * 100) 
                         : 0)}%
@@ -483,16 +391,92 @@ const BattleView = ({ items, onBattle, contentType }: { items: Content[], onBatt
                   </div>
                 </div>
               </div>
-              <div className="absolute top-4 right-4 bg-indigo-600 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-6 right-6 bg-brand text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0 shadow-xl">
                 Выбрать
               </div>
             </motion.button>
-            </React.Fragment>
           );
         })}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white w-14 h-14 md:w-16 md:h-16 rounded-full shadow-2xl flex items-center justify-center font-black text-xl md:text-2xl border-4 border-indigo-600 z-10">
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 glass w-16 h-16 md:w-20 md:h-20 rounded-[2rem] shadow-2xl flex items-center justify-center font-display text-2xl md:text-3xl text-brand z-10 border-2 border-white/50">
           VS
         </div>
+      </div>
+    </div>
+  );
+};
+
+const BattleMainView = ({ movies, books, onBattle }: { 
+  movies: Movie[], 
+  books: Book[],
+  onBattle: (winnerId: string, loserId: string, contentType: 'movie' | 'book') => void 
+}) => {
+  const [battleType, setBattleType] = useState<'movies' | 'books' | null>(null);
+
+  if (!battleType) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-0 gap-8 p-6 overflow-y-auto">
+        <div className="text-center space-y-2">
+          <h2 className="text-5xl md:text-7xl font-display tracking-tighter uppercase leading-[0.85]">Выберите<br />битву</h2>
+          <p className="text-slate-400 text-xs font-black uppercase tracking-[0.2em]">Что вы хотите сравнить сегодня?</p>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl">
+          <motion.button
+            whileHover={{ scale: 1.02, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setBattleType('movies')}
+            className="group relative h-48 sm:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl bg-brand text-white"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-light to-brand-dark opacity-90" />
+            <div className="relative h-full flex flex-col items-center justify-center p-8 text-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform backdrop-blur-md border border-white/20">
+                <Swords className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-display uppercase tracking-tight">Фильмы</h3>
+                <p className="text-white/60 text-[10px] mt-1 font-black uppercase tracking-widest">Лучшие картины</p>
+              </div>
+            </div>
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.02, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => setBattleType('books')}
+            className="group relative h-48 sm:h-80 rounded-[2.5rem] overflow-hidden shadow-2xl bg-emerald-600 text-white"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 to-emerald-800 opacity-90" />
+            <div className="relative h-full flex flex-col items-center justify-center p-8 text-center gap-4">
+              <div className="w-16 h-16 bg-white/20 rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform backdrop-blur-md border border-white/20">
+                <BookOpen className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-3xl font-display uppercase tracking-tight">Книги</h3>
+                <p className="text-white/60 text-[10px] mt-1 font-black uppercase tracking-widest">Лучшие произведения</p>
+              </div>
+            </div>
+          </motion.button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full relative">
+      <button 
+        onClick={() => setBattleType(null)}
+        className="absolute top-4 left-4 z-20 glass p-2 rounded-full shadow-sm hover:bg-white transition-colors border border-white/50 flex items-center gap-2 px-3"
+      >
+        <X className="w-4 h-4 text-slate-600" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-slate-600">Назад</span>
+      </button>
+      
+      <div className="h-full pt-12 overflow-y-auto min-h-0">
+        {battleType === 'movies' ? (
+          <BattleView items={movies} onBattle={(w, l) => onBattle(w, l, 'movie')} contentType="movie" />
+        ) : (
+          <BattleView items={books} onBattle={(w, l) => onBattle(w, l, 'book')} contentType="book" />
+        )}
       </div>
     </div>
   );
@@ -520,6 +504,7 @@ const RankingView = ({
   useEffect(() => {
     setContentType(defaultContentType);
   }, [defaultContentType]);
+
   const [sortBy, setSortBy] = useState<'rating' | 'likes' | 'wins' | 'activity'>('likes');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
@@ -560,19 +545,19 @@ const RankingView = ({
     else if (sortBy === 'activity') setSortBy('likes');
   }, [selectedGenre, limit, contentType, sortBy]);
 
-  if (items.length === 0) {
+  if (items.length === 0 && contentType !== 'user') {
     return (
       <div className="max-w-2xl mx-auto py-20 px-4 text-center">
-        <div className="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-          <Trophy className="w-10 h-10 text-indigo-600 animate-pulse" />
+        <div className="w-24 h-24 bg-brand/10 rounded-[2.5rem] flex items-center justify-center mx-auto mb-8 border-2 border-brand/20">
+          <Trophy className="w-12 h-12 text-brand animate-pulse" />
         </div>
-        <h2 className="text-2xl font-black mb-2">Загрузка рейтинга...</h2>
-        <p className="text-gray-500 mb-8">Мы готовим для вас список лучших {contentType === 'movie' ? 'фильмов' : 'книг'}. Пожалуйста, подождите.</p>
+        <h2 className="text-4xl font-display uppercase tracking-tight mb-3">Загрузка...</h2>
+        <p className="text-slate-400 font-medium mb-8">Мы готовим для вас список лучших {contentType === 'movie' ? 'фильмов' : 'книг'}.</p>
         {isAdmin && onSync && (
           <button
             onClick={onSync}
             disabled={isSyncing}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all disabled:opacity-50"
+            className="btn-primary inline-flex items-center gap-3"
           >
             {isSyncing ? (
               <>
@@ -582,7 +567,7 @@ const RankingView = ({
             ) : (
               <>
                 <RefreshCw className="w-5 h-5" />
-                Синхронизировать сейчас
+                Синхронизировать
               </>
             )}
           </button>
@@ -592,39 +577,39 @@ const RankingView = ({
   }
 
   return (
-    <div className="max-w-2xl mx-auto py-8 px-4 h-full overflow-y-auto">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-3xl font-black tracking-tight">Рейтинг</h2>
-        <Trophy className="w-8 h-8 text-indigo-600" />
+    <div className="max-w-2xl mx-auto py-12 px-6 h-full overflow-y-auto pb-32">
+      <div className="flex items-center justify-between mb-12">
+        <h2 className="text-6xl font-display uppercase tracking-tighter leading-none">Рейтинг</h2>
+        <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center">
+          <Trophy className="w-8 h-8 text-brand" />
+        </div>
       </div>
 
-      <div className="flex gap-2 mb-6 bg-gray-100 p-1 rounded-2xl">
-        <button 
-          onClick={() => setContentType('movie')} 
-          className={cn("flex-1 py-2 rounded-xl font-bold text-sm transition-all", contentType === 'movie' ? "bg-white shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-700")}
-        >
-          Фильмы
-        </button>
-        <button 
-          onClick={() => setContentType('book')} 
-          className={cn("flex-1 py-2 rounded-xl font-bold text-sm transition-all", contentType === 'book' ? "bg-white shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-700")}
-        >
-          Книги
-        </button>
-        <button 
-          onClick={() => setContentType('user')} 
-          className={cn("flex-1 py-2 rounded-xl font-bold text-sm transition-all", contentType === 'user' ? "bg-white shadow-sm text-indigo-600" : "text-gray-500 hover:text-gray-700")}
-        >
-          Пользователи
-        </button>
+      <div className="flex gap-2 mb-10 glass p-1.5 rounded-3xl">
+        {[
+          { id: 'movie', label: 'Фильмы' },
+          { id: 'book', label: 'Книги' },
+          { id: 'user', label: 'Топ' },
+        ].map(tab => (
+          <button 
+            key={tab.id}
+            onClick={() => setContentType(tab.id as any)} 
+            className={cn(
+              "flex-1 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all", 
+              contentType === tab.id ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-slate-400 hover:text-slate-600"
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-      <div className="space-y-6 mb-8">
+      <div className="space-y-8 mb-12">
         {contentType !== 'user' && (
           <>
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Сортировать по</p>
-              <div className="flex flex-wrap gap-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Сортировать по</p>
+              <div className="flex flex-wrap gap-2">
                 {[
                   { id: 'likes', label: 'Лайкам', icon: Heart },
                   { id: 'rating', label: 'Рейтингу', icon: Star },
@@ -634,11 +619,11 @@ const RankingView = ({
                     key={opt.id}
                     onClick={() => setSortBy(opt.id as any)}
                     className={cn(
-                      "flex items-center gap-1.5 px-3 py-1 rounded-lg text-base font-bold transition-all",
-                      sortBy === opt.id ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50"
+                      "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2",
+                      sortBy === opt.id ? "bg-brand border-brand text-white shadow-lg shadow-brand/20" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
                     )}
                   >
-                    <opt.icon className="w-5 h-5" />
+                    <opt.icon className="w-4 h-4" />
                     {opt.label}
                   </button>
                 ))}
@@ -646,13 +631,13 @@ const RankingView = ({
             </div>
 
             <div>
-              <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Жанр</p>
-              <div className="flex flex-wrap gap-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 ml-1">Жанр</p>
+              <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setSelectedGenre(null)}
                   className={cn(
-                    "px-3 py-1 rounded-lg text-base font-bold transition-all",
-                    selectedGenre === null ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50"
+                    "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2",
+                    selectedGenre === null ? "bg-brand border-brand text-white shadow-lg shadow-brand/20" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
                   )}
                 >
                   Все
@@ -662,8 +647,8 @@ const RankingView = ({
                     key={genre}
                     onClick={() => setSelectedGenre(genre)}
                     className={cn(
-                      "px-3 py-1 rounded-lg text-base font-bold transition-all",
-                      selectedGenre === genre ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50"
+                      "px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all border-2",
+                      selectedGenre === genre ? "bg-brand border-brand text-white shadow-lg shadow-brand/20" : "bg-white border-slate-100 text-slate-400 hover:border-slate-200"
                     )}
                   >
                     {genre}
@@ -673,30 +658,12 @@ const RankingView = ({
             </div>
           </>
         )}
-
-        <div>
-          <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Показывать по</p>
-          <div className="flex flex-wrap gap-1">
-            {[10, 20, 50, 100].map(opt => (
-              <button
-                key={opt}
-                onClick={() => setLimit(opt)}
-                className={cn(
-                  "px-3 py-1 rounded-lg text-base font-bold transition-all",
-                  limit === opt ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50"
-                )}
-              >
-                {opt}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
-      <div className="space-y-4 mb-8">
+      <div className="space-y-4 mb-12">
         {loadingUsers ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+            <Loader2 className="w-10 h-10 text-brand animate-spin" />
           </div>
         ) : displayedItems.length > 0 ? (
           displayedItems.map((item: any, idx) => {
@@ -709,25 +676,25 @@ const RankingView = ({
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
                   onClick={() => onSelect({ id: user.uid, type: 'user' } as any)}
-                  className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 cursor-pointer hover:shadow-md transition-shadow group"
+                  className="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-5 cursor-pointer hover:shadow-xl hover:border-brand/20 transition-all group"
                 >
-                  <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-black text-lg shrink-0 overflow-hidden">
+                  <div className="w-14 h-14 bg-brand/5 rounded-2xl flex items-center justify-center text-brand font-display text-2xl shrink-0 overflow-hidden border border-brand/10">
                     {user.photoURL ? <img src={user.photoURL} alt="" className="w-full h-full object-cover" /> : user.displayName?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-lg leading-tight group-hover:text-indigo-600 transition-colors truncate">{user.displayName || 'Пользователь'}</h3>
-                    <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
-                      <div className="flex items-center gap-1" title="Лайки на отзывы">
+                    <h3 className="font-display text-2xl uppercase tracking-tight group-hover:text-brand transition-colors truncate">{user.displayName || 'Пользователь'}</h3>
+                    <div className="flex items-center gap-4 mt-1">
+                      <div className="flex items-center gap-1.5 bg-yellow-400/10 px-2 py-0.5 rounded-lg border border-yellow-400/20">
                         <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                        <span className="font-bold text-gray-700">{user.totalLikesReceived || 0}</span>
+                        <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">{user.totalLikesReceived || 0}</span>
                       </div>
-                      <div className="flex items-center gap-1" title="Лайки на комментарии">
-                        <Heart className="w-3 h-3 text-pink-500 fill-pink-500" />
-                        <span className="font-bold text-gray-700">{user.totalCommentLikesReceived || 0}</span>
+                      <div className="flex items-center gap-1.5 bg-rose-400/10 px-2 py-0.5 rounded-lg border border-rose-400/20">
+                        <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
+                        <span className="text-[10px] font-black text-rose-600 uppercase tracking-widest">{user.totalCommentLikesReceived || 0}</span>
                       </div>
                     </div>
                   </div>
-                  <div className="text-2xl font-black text-gray-100 group-hover:text-indigo-50 text-right pr-2">
+                  <div className="text-4xl font-display text-slate-100 group-hover:text-brand/10 text-right transition-colors">
                     #{idx + 1 + (currentPage - 1) * limit}
                   </div>
                 </motion.div>
@@ -746,74 +713,56 @@ const RankingView = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
                 onClick={() => onSelect(item)}
-                className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-start gap-4 cursor-pointer hover:shadow-md transition-shadow group relative"
+                className="bg-white p-5 rounded-[2rem] shadow-sm border border-slate-100 flex items-center gap-6 cursor-pointer hover:shadow-xl hover:border-brand/20 transition-all group relative overflow-hidden"
               >
-                <div className="shrink-0">
+                <div className="shrink-0 relative">
                   <img 
                     src={posterUrl} 
                     alt="" 
-                    className="w-16 h-24 object-cover rounded-lg shadow-sm"
+                    className="w-20 h-28 object-cover rounded-2xl shadow-lg ring-1 ring-black/5"
                     referrerPolicy="no-referrer"
                     onError={(e) => { e.currentTarget.src = isMovie ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }}
                   />
+                  <div className="absolute -top-2 -left-2 w-8 h-8 bg-brand text-white rounded-full flex items-center justify-center font-display text-sm shadow-lg border-2 border-white">
+                    {idx + 1 + (currentPage - 1) * limit}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0 py-1 flex flex-col justify-center min-h-[96px] pr-10">
-                  <h3 className="font-bold text-lg leading-tight group-hover:text-indigo-600 transition-colors mb-1 line-clamp-2 text-balance">{item.title}</h3>
-                  <div className="flex items-center gap-0.5 mb-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={cn(
-                          "w-3 h-3",
-                          (item.rating / 2) >= star 
-                            ? "text-yellow-400 fill-yellow-400" 
-                            : (item.rating / 2) >= star - 0.5 
-                              ? "text-yellow-400 fill-yellow-400 opacity-50" 
-                              : "text-gray-200 fill-gray-200"
-                        )}
-                      />
-                    ))}
-                    <span className="ml-1.5 text-[10px] font-black text-gray-400 uppercase tracking-wider">{(item.rating || 0).toFixed(1)}</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-xs text-gray-400 mb-3 truncate">
-                    <span className="shrink-0">{isMovie ? movie?.releaseYear : book?.releaseYear}</span>
-                    {(isMovie ? movie?.director : book?.author) && (
-                      <>
-                        <span className="shrink-0">•</span>
-                        <span className="truncate">{isMovie ? `Реж. ${movie?.director}` : `Авт. ${book?.author}`}</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-4 mt-auto text-sm text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4 text-red-500 fill-red-500" />
-                      <span className="font-bold text-gray-900">{item.swipeLikes}</span>
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <h3 className="font-display text-2xl uppercase tracking-tighter group-hover:text-brand transition-colors mb-2 line-clamp-1 leading-none">{item.title}</h3>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="flex items-center gap-1 bg-yellow-400/10 px-2 py-0.5 rounded-lg border border-yellow-400/20">
+                      <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                      <span className="text-[10px] font-black text-yellow-600 uppercase tracking-widest">{(item.rating || 0).toFixed(1)}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <Swords className="w-4 h-4 text-indigo-500 fill-indigo-500" />
-                      <span className="font-bold text-indigo-600">{item.battleWins}</span>
-                      <span className="text-gray-300">/</span>
-                      <span className="font-bold text-rose-500">{item.battleLosses}</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest truncate">
+                      {isMovie ? movie?.releaseYear : book?.releaseYear} • {isMovie ? `Реж. ${movie?.director}` : `Авт. ${book?.author}`}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-1.5">
+                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                      <span className="text-xs font-black text-slate-900">{item.swipeLikes}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Swords className="w-4 h-4 text-brand" />
+                      <span className="text-xs font-black text-brand">{item.battleWins}</span>
+                      <span className="text-slate-200">/</span>
+                      <span className="text-xs font-black text-rose-400">{item.battleLosses}</span>
                     </div>
                   </div>
                 </div>
-                <div className={cn(
-                  "absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shadow-sm",
-                  ((currentPage - 1) * limit + idx) === 0 ? "bg-yellow-100 text-yellow-700" : 
-                  ((currentPage - 1) * limit + idx) === 1 ? "bg-gray-100 text-gray-700" :
-                  ((currentPage - 1) * limit + idx) === 2 ? "bg-orange-100 text-orange-700" : "bg-gray-50 text-gray-400"
-                )}>
-                  {(currentPage - 1) * limit + idx + 1}
-                </div>
-                <div className="absolute bottom-4 right-4 shrink-0 self-center">
-                  <ChevronRight className="text-gray-300 group-hover:text-indigo-600 transition-colors" />
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 translate-x-4 transition-all">
+                  <div className="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand">
+                    <ChevronRight className="w-6 h-6" />
+                  </div>
                 </div>
               </motion.div>
             );
           })
         ) : (
-          <div className="text-center py-12 bg-white rounded-3xl border border-dashed border-gray-200">
-            <p className="text-gray-400 font-medium">{contentType === 'movie' ? 'Фильмы' : 'Книги'} не найдены</p>
+          <div className="text-center py-20 glass rounded-[2.5rem]">
+            <Sparkles className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-400 font-black uppercase tracking-widest text-xs">Ничего не найдено</p>
           </div>
         )}
       </div>
@@ -823,7 +772,7 @@ const RankingView = ({
           <button
             onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
             disabled={currentPage === 1}
-            className="p-3 rounded-xl bg-white border border-gray-100 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+            className="p-3 rounded-2xl glass text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white transition-colors border border-white/50"
           >
             <ChevronLeft className="w-6 h-6" />
           </button>
@@ -846,10 +795,10 @@ const RankingView = ({
                   key={pageNum}
                   onClick={() => setCurrentPage(pageNum)}
                   className={cn(
-                    "w-10 h-10 rounded-xl font-bold text-sm transition-all",
+                    "w-12 h-12 rounded-2xl font-black text-xs transition-all",
                     currentPage === pageNum 
-                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" 
-                      : "bg-white text-gray-500 border border-gray-100 hover:bg-gray-50"
+                      ? "bg-brand text-white shadow-lg shadow-brand/20" 
+                      : "glass text-slate-500 hover:bg-white border border-white/50"
                   )}
                 >
                   {pageNum}
@@ -861,7 +810,7 @@ const RankingView = ({
           <button
             onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
             disabled={currentPage === totalPages}
-            className="p-3 rounded-xl bg-white border border-gray-100 text-gray-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+            className="p-3 rounded-2xl glass text-slate-500 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white transition-colors border border-white/50"
           >
             <ChevronRight className="w-6 h-6" />
           </button>
@@ -919,73 +868,69 @@ const SuggestionsView = ({
   }, [userProfile]);
 
   return (
-    <div className="h-full overflow-y-auto pb-24 scrollbar-hide">
-      <div className="max-w-2xl mx-auto py-8 px-4 space-y-12">
-        {/* Recommendations Section */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-bold">Персональные советы</h2>
-                <p className="text-sm text-gray-500">На основе ваших предпочтений</p>
-              </div>
-            </div>
-            <button 
-              onClick={fetchSuggestions}
-              disabled={loading}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
-              title="Обновить советы"
-            >
-              <RefreshCw className={cn("w-5 h-5 text-gray-400", loading && "animate-spin")} />
-            </button>
+    <div className="h-full overflow-y-auto pb-32 scrollbar-hide">
+      <div className="max-w-2xl mx-auto py-12 px-6 space-y-12">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-5xl font-display uppercase tracking-tighter leading-none mb-2">Советы</h2>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Персональные рекомендации ИИ</p>
           </div>
+          <button 
+            onClick={fetchSuggestions}
+            disabled={loading}
+            className="w-14 h-14 glass rounded-2xl flex items-center justify-center text-brand hover:bg-white transition-all disabled:opacity-50 group"
+          >
+            <RefreshCw className={cn("w-6 h-6", loading && "animate-spin")} />
+          </button>
+        </div>
 
-          {loading ? (
-            <div className="flex flex-col items-center justify-center py-12 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
-              <Loader2 className="w-8 h-8 text-emerald-600 animate-spin mb-4" />
-              <p className="text-gray-500 font-medium">Анализируем ваши вкусы...</p>
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-24 glass rounded-[2.5rem] border-2 border-brand/10">
+            <div className="w-20 h-20 bg-brand/10 rounded-[2rem] flex items-center justify-center mb-6">
+              <Loader2 className="w-10 h-10 text-brand animate-spin" />
             </div>
-          ) : suggestions.length > 0 ? (
-            <div className="grid gap-4">
-              {suggestions.map((s, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-md transition-all group"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg",
-                        s.type === 'movie' ? "bg-indigo-50 text-indigo-600" : "bg-emerald-50 text-emerald-600"
-                      )}>
-                        {s.type === 'movie' ? 'Фильм' : 'Книга'}
-                      </span>
-                    </div>
+            <p className="text-xl font-display uppercase tracking-tight text-slate-900">Анализируем вкусы...</p>
+            <p className="text-sm text-slate-400 font-medium mt-2">Ищем что-то особенное для вас</p>
+          </div>
+        ) : suggestions.length > 0 ? (
+          <div className="grid gap-6">
+            {suggestions.map((s, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm hover:shadow-xl hover:border-brand/20 transition-all group relative overflow-hidden"
+              >
+                <div className="flex justify-between items-start mb-6">
+                  <div className={cn(
+                    "px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] border",
+                    s.type === 'movie' ? "bg-indigo-50 text-indigo-600 border-indigo-100" : "bg-emerald-50 text-emerald-600 border-emerald-100"
+                  )}>
+                    {s.type === 'movie' ? 'Кино' : 'Книга'}
                   </div>
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-indigo-600 transition-colors">{s.title}</h3>
-                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">{s.description}</p>
-                  <div className="bg-gray-50 p-4 rounded-2xl">
-                    <p className="text-xs text-gray-500 italic">
-                      <span className="font-bold text-gray-700 not-italic mr-1">Почему это вам понравится:</span>
-                      {s.reason}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
+                  <Sparkles className="w-6 h-6 text-brand/20 group-hover:text-brand transition-colors" />
+                </div>
+                <h3 className="text-3xl font-display uppercase tracking-tighter mb-4 group-hover:text-brand transition-colors leading-none">{s.title}</h3>
+                <p className="text-slate-500 text-sm mb-8 leading-relaxed font-medium">{s.description}</p>
+                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                  <p className="text-xs text-slate-400 leading-relaxed italic">
+                    <span className="font-black text-slate-900 not-italic uppercase tracking-widest text-[10px] block mb-2">Почему вам понравится:</span>
+                    {s.reason}
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-24 glass rounded-[2.5rem] border-2 border-dashed border-slate-200">
+            <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+              <Sparkles className="w-10 h-10 text-slate-200" />
             </div>
-          ) : (
-            <div className="text-center py-12 bg-white rounded-[2rem] border border-gray-100 shadow-sm">
-              <Sparkles className="w-12 h-12 text-gray-200 mx-auto mb-4" />
-              <p className="text-gray-500">Оцените больше фильмов и книг, чтобы получить персональные советы!</p>
-            </div>
-          )}
-        </section>
+            <h3 className="text-2xl font-display uppercase tracking-tight text-slate-400 mb-2">Пусто</h3>
+            <p className="text-sm text-slate-400 font-medium max-w-xs mx-auto">Оцените больше контента, чтобы ИИ смог понять ваши предпочтения</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1006,67 +951,79 @@ const ChatView = () => {
 
     try {
       const response = await GeminiService.chat(userMsg, []);
-      setMessages(prev => [...prev, { role: 'ai', text: response || 'Sorry, I couldn\'t process that.' }]);
+      setMessages(prev => [...prev, { role: 'ai', text: response || 'Извините, я не смог обработать ваш запрос.' }]);
     } catch (err) {
       console.error(err);
-      setMessages(prev => [...prev, { role: 'ai', text: 'Error connecting to AI.' }]);
+      setMessages(prev => [...prev, { role: 'ai', text: 'Ошибка подключения к ИИ.' }]);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-full p-4">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-          <MessageSquare className="w-6 h-6 text-white" />
+    <div className="max-w-2xl mx-auto flex flex-col h-full p-6 pb-32">
+      <div className="flex items-center gap-4 mb-8">
+        <div className="w-14 h-14 bg-brand rounded-2xl flex items-center justify-center shadow-lg shadow-brand/20">
+          <MessageSquare className="w-8 h-8 text-white" />
         </div>
         <div>
-          <h2 className="text-xl font-bold">Movie Expert AI</h2>
-          <p className="text-xs text-gray-500">Ask anything about cinema</p>
+          <h2 className="text-3xl font-display uppercase tracking-tighter leading-none mb-1">Кино-Эксперт</h2>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Спросите что угодно о кино и книгах</p>
         </div>
       </div>
       
-      <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-2 scrollbar-hide">
+      <div className="flex-1 overflow-y-auto space-y-6 mb-6 pr-2 scrollbar-hide">
         {messages.length === 0 && (
-          <div className="text-center py-12 text-gray-400">
-            <p>Try asking: "What are some good sci-fi movies from the 90s?"</p>
+          <div className="text-center py-24 glass rounded-[2.5rem] border-2 border-dashed border-slate-200">
+            <Sparkles className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+            <p className="text-slate-400 font-medium max-w-xs mx-auto">Попробуйте спросить: "Какие фантастические фильмы из 90-х стоит посмотреть?"</p>
           </div>
         )}
         {messages.map((msg, idx) => (
-          <div key={idx} className={cn(
-            "flex",
-            msg.role === 'user' ? "justify-end" : "justify-start"
-          )}>
+          <motion.div 
+            key={idx}
+            initial={{ opacity: 0, x: msg.role === 'user' ? 20 : -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className={cn(
+              "flex",
+              msg.role === 'user' ? "justify-end" : "justify-start"
+            )}
+          >
             <div className={cn(
-              "max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed",
-              msg.role === 'user' ? "bg-indigo-600 text-white rounded-tr-none" : "bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-sm"
+              "max-w-[85%] p-5 rounded-[1.5rem] text-sm leading-relaxed font-medium shadow-sm",
+              msg.role === 'user' 
+                ? "bg-brand text-white rounded-tr-none shadow-brand/10" 
+                : "bg-white text-slate-800 border border-slate-100 rounded-tl-none"
             )}>
               {msg.text}
             </div>
-          </div>
+          </motion.div>
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-white p-4 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm">
-              <Loader2 className="w-5 h-5 animate-spin text-indigo-600" />
+            <div className="bg-white p-5 rounded-[1.5rem] rounded-tl-none border border-slate-100 shadow-sm">
+              <div className="flex gap-1.5">
+                <div className="w-2 h-2 bg-brand/40 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-brand/40 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-brand/40 rounded-full animate-bounce [animation-delay:0.4s]" />
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      <div className="flex gap-2 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm">
+      <div className="flex gap-3 bg-white p-3 rounded-[2rem] border border-slate-200 shadow-xl shadow-slate-200/50">
         <input 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Type your message..."
-          className="flex-1 bg-transparent px-4 py-2 outline-none"
+          placeholder="Напишите сообщение..."
+          className="flex-1 bg-transparent px-6 py-3 outline-none font-medium text-slate-900 placeholder:text-slate-300"
         />
         <button 
           onClick={handleSend}
           disabled={loading}
-          className="bg-indigo-600 text-white p-2 rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-50"
+          className="bg-brand text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:bg-brand-dark transition-all disabled:opacity-50 shadow-lg shadow-brand/20"
         >
           <Send className="w-5 h-5" />
         </button>
@@ -1168,17 +1125,17 @@ const ContentDetails = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-end md:items-center justify-center p-4"
+      className="fixed inset-0 bg-slate-900/80 backdrop-blur-xl z-[60] flex items-end md:items-center justify-center p-0 md:p-6"
       onClick={onClose}
     >
       <motion.div 
-        initial={{ y: 100 }}
+        initial={{ y: "100%" }}
         animate={{ y: 0 }}
-        exit={{ y: 100 }}
+        exit={{ y: "100%" }}
         onClick={e => e.stopPropagation()}
-        className="bg-gray-50 w-full max-w-2xl h-[90vh] rounded-t-[2rem] md:rounded-[2rem] overflow-hidden flex flex-col"
+        className="bg-slate-50 w-full max-w-4xl h-[95vh] md:h-[85vh] rounded-t-[3rem] md:rounded-[3rem] overflow-hidden flex flex-col shadow-2xl"
       >
-        <div className="relative h-80 flex-shrink-0">
+        <div className="relative h-96 shrink-0">
           <img 
             src={backdropUrl || posterUrl} 
             alt="" 
@@ -1186,14 +1143,60 @@ const ContentDetails = ({
             referrerPolicy="no-referrer" 
             onError={(e) => { e.currentTarget.src = isMovie ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-black/20 to-transparent" />
-          <div className="absolute bottom-6 left-8 flex gap-6 items-end">
-            <div className="hidden md:block w-32 h-48 rounded-xl overflow-hidden shadow-2xl border-4 border-white flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-900/40 to-transparent" />
+          
+          <div className="absolute top-6 left-6 right-6 flex justify-between items-center">
+            <button 
+              onClick={onClose}
+              className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="flex gap-2">
+              <button 
+                onClick={(e) => { e.stopPropagation(); onToggleLike(!isLiked); }}
+                className={cn(
+                  "w-12 h-12 glass rounded-2xl flex items-center justify-center transition-all",
+                  isLiked ? "bg-rose-500 text-white border-rose-400" : "text-white hover:bg-white/20"
+                )}
+              >
+                <Heart className={cn("w-6 h-6", isLiked ? "fill-white" : "")} />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onToggleFavorite(!isFavorite); }}
+                className={cn(
+                  "w-12 h-12 glass rounded-2xl flex items-center justify-center transition-all",
+                  isFavorite ? "bg-brand text-white border-brand/40" : "text-white hover:bg-white/20"
+                )}
+              >
+                <Bookmark className={cn("w-6 h-6", isFavorite ? "fill-white" : "")} />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setShowCollectionPicker(!showCollectionPicker); }}
+                className="w-12 h-12 glass rounded-2xl flex items-center justify-center text-white hover:bg-white/20 transition-all"
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          <div className="absolute bottom-8 left-8 right-8 flex gap-8 items-end">
+            <div className="hidden md:block w-40 h-60 rounded-[2rem] overflow-hidden shadow-2xl border-4 border-white shrink-0">
               <img src={posterUrl} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.src = isMovie ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }} />
             </div>
-            <div className="mb-2">
-              <h2 className="text-4xl font-black text-white drop-shadow-lg">{content.title}</h2>
-              <p className="text-white/80 font-bold drop-shadow-md">{isMovie ? movie?.releaseYear : book?.releaseYear} • {content.genre}</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="px-3 py-1 glass rounded-lg text-[10px] font-black uppercase tracking-widest text-white border border-white/20">
+                  {content.genre}
+                </span>
+                <span className="px-3 py-1 glass rounded-lg text-[10px] font-black uppercase tracking-widest text-white border border-white/20">
+                  {isMovie ? movie?.releaseYear : book?.releaseYear}
+                </span>
+              </div>
+              <h2 className="text-6xl font-display uppercase tracking-tighter text-white leading-none mb-2 drop-shadow-2xl">{content.title}</h2>
+              <p className="text-white/80 font-medium text-lg drop-shadow-lg">
+                {isMovie ? `Режиссер: ${movie?.director}` : `Автор: ${book?.author}`}
+              </p>
             </div>
           </div>
           <button 
@@ -1221,9 +1224,9 @@ const ContentDetails = ({
             <Plus className="w-5 h-5" />
           </button>
           {showCollectionPicker && (
-            <div className="absolute top-16 right-4 w-64 bg-white rounded-2xl shadow-2xl p-4 z-50 border border-gray-100">
-              <h4 className="text-sm font-black mb-3 text-gray-900">Добавить в коллекцию</h4>
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+            <div className="absolute top-20 right-6 w-72 bg-white rounded-[2rem] shadow-2xl p-6 z-50 border border-slate-100">
+              <h4 className="text-xs font-black uppercase tracking-widest mb-4 text-slate-400">Добавить в коллекцию</h4>
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-2 scrollbar-hide">
                 {userCollections.map(col => (
                   <button 
                     key={col.id}
@@ -1231,126 +1234,36 @@ const ContentDetails = ({
                       await MovieService.addContentToCollection(col.id, content.id, content.type);
                       setShowCollectionPicker(false);
                     }}
-                    className="w-full text-left p-2 hover:bg-indigo-50 rounded-xl transition-colors text-xs font-bold text-gray-600 flex items-center justify-between group"
+                    className="w-full text-left p-4 hover:bg-brand/5 rounded-2xl transition-all text-sm font-bold text-slate-600 flex items-center justify-between group"
                   >
-                    <span className="truncate group-hover:text-indigo-600">{col.name}</span>
-                    <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100" />
+                    <span className="truncate group-hover:text-brand">{col.name}</span>
+                    <Plus className="w-4 h-4 opacity-0 group-hover:opacity-100 text-brand" />
                   </button>
                 ))}
                 {userCollections.length === 0 && (
-                  <p className="text-[10px] text-gray-400 italic">У вас пока нет коллекций</p>
+                  <p className="text-xs text-slate-400 italic text-center py-4">У вас пока нет коллекций</p>
                 )}
-              </div>
-              <div className="mt-4 pt-4 border-t">
-                <input 
-                  type="text" 
-                  placeholder="Новая коллекция..." 
-                  className="w-full p-2 text-xs border rounded-xl mb-2"
-                  onKeyDown={async (e) => {
-                    if (e.key === 'Enter') {
-                      const name = e.currentTarget.value;
-                      if (!name.trim()) return;
-                      await MovieService.createCollection(auth.currentUser!.uid, name);
-                      const updated = await MovieService.getUserCollections(auth.currentUser!.uid);
-                      setUserCollections(updated);
-                      e.currentTarget.value = '';
-                    }
-                  }}
-                />
               </div>
             </div>
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-6">
-              <div className="md:hidden">
-                <h2 className="text-4xl font-black mb-2">{content.title}</h2>
-              </div>
+        <div className="flex-1 overflow-y-auto p-8 space-y-12 scrollbar-hide">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="md:col-span-2 space-y-10">
               <div>
-                <div className="flex flex-wrap items-center gap-4 text-gray-500">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
-                    <span className="font-bold text-gray-900 text-xl">{(content.rating || 0).toFixed(1)}</span>
-                  </div>
-                  <span>•</span>
-                  <span>{content.totalVotes} отзывов</span>
-                  {content.genre && (
-                    <>
-                      <span>•</span>
-                      <span className="bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full text-sm font-bold uppercase tracking-wider">{content.genre}</span>
-                    </>
-                  )}
-                  {content.releaseYear && (
-                    <>
-                      <span>•</span>
-                      <span className="font-medium">{content.releaseYear}</span>
-                    </>
-                  )}
-                </div>
-                <p className="mt-6 text-gray-600 leading-relaxed text-lg">{content.description}</p>
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">О чем это</h3>
+                <p className="text-slate-600 leading-relaxed text-lg font-medium">{content.description}</p>
               </div>
 
-              {isMovie && movie?.actors && movie.actors.length > 0 && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Актеры</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {movie.actors.map((actor, i) => (
-                      <span key={i} className="bg-white border border-gray-200 px-4 py-2 rounded-xl text-sm font-medium text-gray-700 shadow-sm">
-                        {actor}
-                      </span>
-                    ))}
+              <div>
+                <div className="flex items-center justify-between mb-8">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Отзывы</h3>
+                  <div className="flex items-center gap-2 bg-yellow-400/10 px-3 py-1 rounded-xl border border-yellow-400/20">
+                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <span className="text-sm font-black text-yellow-700">{(content.rating || 0).toFixed(1)}</span>
                   </div>
                 </div>
-              )}
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Инфо</h3>
-                <div className="space-y-4">
-                  {(isMovie ? movie?.director : book?.author) && (
-                    <div className="space-y-1">
-                      <p className="text-xs text-gray-400 uppercase font-bold mb-1">{isMovie ? 'Режиссер' : 'Автор'}</p>
-                      <p className="font-bold text-gray-900">{isMovie ? movie?.director : book?.author}</p>
-                      {!isMovie && book?.authorDescription && (
-                        <p className="text-[10px] text-gray-500 leading-tight italic mt-1">{book.authorDescription}</p>
-                      )}
-                    </div>
-                  )}
-                  {isMovie && movie?.budget && (
-                    <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold mb-1">Бюджет</p>
-                      <p className="font-bold text-gray-900">{movie.budget}</p>
-                    </div>
-                  )}
-                  {!isMovie && book?.pages && (
-                    <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold mb-1">Страниц</p>
-                      <p className="font-bold text-gray-900">{book.pages}</p>
-                    </div>
-                  )}
-                  {!isMovie && book?.publisher && (
-                    <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold mb-1">Издательство</p>
-                      <p className="font-bold text-gray-900">{book.publisher}</p>
-                    </div>
-                  )}
-                  {content.releaseYear && (
-                    <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold mb-1">{isMovie ? 'Год выпуска' : 'Год издания'}</p>
-                      <p className="font-bold text-gray-900">{content.releaseYear}</p>
-                    </div>
-                  )}
-                  {content.genre && (
-                    <div>
-                      <p className="text-xs text-gray-400 uppercase font-bold mb-1">Жанр</p>
-                      <p className="font-bold text-gray-900">{content.genre}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className={cn("p-6 rounded-3xl text-white shadow-xl shadow-indigo-100", isMovie ? "bg-indigo-600" : "bg-emerald-600")}>
@@ -1371,182 +1284,61 @@ const ContentDetails = ({
             </div>
           </div>
 
-          {similarItems.length > 0 && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-black uppercase tracking-tighter">Похожие {isMovie ? 'фильмы' : 'книги'}</h3>
-              <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
-                {similarItems.map(sm => (
-                  <button 
-                    key={sm.id}
-                    onClick={() => onSelect(sm)}
-                    className="flex-shrink-0 w-32 group text-left"
-                  >
-                    <div className="aspect-[2/3] rounded-2xl overflow-hidden mb-2 shadow-sm group-hover:shadow-md transition-all group-hover:-translate-y-1">
-                      <img src={sm.posterUrl} alt={sm.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.src = isMovie ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }} />
+            <div className="space-y-10">
+              <div>
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400 mb-6">Похожее</h3>
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-4">
+                  {similarItems.slice(0, 4).map((item) => (
+                    <div 
+                      key={item.id}
+                      onClick={() => onSelect(item)}
+                      className="group cursor-pointer flex items-center gap-4 bg-white p-3 rounded-2xl border border-slate-100 hover:shadow-lg hover:border-brand/20 transition-all"
+                    >
+                      <img 
+                        src={item.posterUrl} 
+                        alt="" 
+                        className="w-16 h-24 object-cover rounded-xl shadow-md group-hover:scale-105 transition-transform"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => { e.currentTarget.src = isMovie ? 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=500' : 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?auto=format&fit=crop&q=80&w=500'; }}
+                      />
+                      <div className="min-w-0">
+                        <h4 className="font-display text-lg uppercase tracking-tighter group-hover:text-brand transition-colors truncate leading-none mb-1">{item.title}</h4>
+                        <div className="flex items-center gap-1.5">
+                          <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
+                          <span className="text-[10px] font-black text-slate-400">{(item.rating || 0).toFixed(1)}</span>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-xs font-bold text-gray-900 line-clamp-1 group-hover:text-indigo-600 transition-colors">{sm.title}</p>
-                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{sm.genre}</p>
-                  </button>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
 
-          <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold mb-4">Оставить отзыв</h3>
-            <div className="flex gap-2 mb-4">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                <button 
-                  key={n} 
-                  onClick={() => setRating(n)}
-                  className={cn(
-                    "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs transition-all",
-                    rating >= n ? "bg-yellow-400 text-white" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                  )}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
-            <textarea 
-              value={comment}
-              onChange={e => setComment(e.target.value)}
-              placeholder={isMovie ? "Что вы думаете об этом фильме?" : "Что вы думаете об этой книге?"}
-              className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-indigo-500 transition-all h-24 resize-none mb-4"
-            />
-            <button 
-              onClick={handleSubmit}
-              disabled={submitting || rating === 0 || !comment.trim()}
-              className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
-            >
-              {submitting ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Опубликовать отзыв"}
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-xl font-bold">Отзывы пользователей</h3>
-            {reviews.length === 0 ? (
-              <p className="text-gray-400 text-center py-8 italic">Отзывов пока нет. Будьте первым!</p>
-            ) : (
-              reviews.map(review => (
-                <div key={review.id} className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
+              <div className="bg-brand/5 p-8 rounded-[2.5rem] border border-brand/10">
+                <h3 className="text-xs font-black uppercase tracking-[0.2em] text-brand mb-6">Статистика</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Лайки</span>
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => onUserClick(review.userId)}
-                      >
-                        {review.userName.charAt(0)}
-                      </div>
-                      <span 
-                        className="font-bold text-sm cursor-pointer hover:text-indigo-600 transition-colors"
-                        onClick={() => onUserClick(review.userId)}
-                      >
-                        {review.userName}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <button 
-                        onClick={() => MovieService.likeReview(review.id, review.userId)}
-                        className="flex items-center gap-1 text-xs font-bold text-gray-400 hover:text-pink-500 transition-colors"
-                      >
-                        <Heart className="w-3 h-3" />
-                        <span>{(review as any).likes || 0}</span>
-                      </button>
-                      <div className="flex items-center gap-1 bg-yellow-50 px-2 py-1 rounded-lg">
-                        <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                        <span className="text-xs font-bold text-yellow-700">{review.rating}</span>
-                      </div>
+                      <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+                      <span className="font-display text-xl">{content.swipeLikes}</span>
                     </div>
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed mb-3">{review.comment}</p>
-                  
-                  <div className="border-t border-gray-50 pt-3">
-                    <div className="flex items-center gap-4 mb-3">
-                      <button 
-                        onClick={() => {
-                          const text = prompt('Ваш комментарий к отзыву:');
-                          if (text) MovieService.addComment(content.id, content.type, text, review.id, review.userId);
-                        }}
-                        className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-indigo-600 transition-colors uppercase tracking-wider"
-                      >
-                        <MessageSquare className="w-3 h-3" />
-                        <span>{(review as any).commentCount || 0} комментов</span>
-                      </button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Победы</span>
+                    <div className="flex items-center gap-2">
+                      <Swords className="w-4 h-4 text-brand" />
+                      <span className="font-display text-xl text-brand">{content.battleWins}</span>
                     </div>
-                    
-                    {/* Only show top 2 comments for each review to keep it clean */}
-                    <div className="space-y-2">
-                      {comments.filter(c => c.reviewId === review.id).slice(0, 2).map(c => (
-                        <div key={c.id} className="bg-gray-50 p-2 rounded-xl text-[10px]">
-                          <span className="font-bold text-indigo-600 mr-1">{c.userName}:</span>
-                          <span className="text-gray-600">{c.text}</span>
-                        </div>
-                      ))}
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Поражения</span>
+                    <div className="flex items-center gap-2">
+                      <X className="w-4 h-4 text-rose-400" />
+                      <span className="font-display text-xl text-rose-400">{content.battleLosses}</span>
                     </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
-
-          <div className="pt-8 border-t border-gray-100">
-            <h3 className="text-2xl font-black mb-6">Комментарии</h3>
-            
-            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-8">
-              <textarea 
-                value={newComment}
-                onChange={e => setNewComment(e.target.value)}
-                placeholder="Добавить комментарий..."
-                className="w-full bg-gray-50 border border-gray-200 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-indigo-500 transition-all h-24 resize-none mb-4"
-              />
-              <button 
-                onClick={handleCommentSubmit}
-                disabled={submittingComment || !newComment.trim()}
-                className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
-              >
-                {submittingComment ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Опубликовать комментарий"}
-              </button>
-            </div>
-
-            <div className="space-y-6">
-              {comments.length === 0 ? (
-                <p className="text-gray-400 text-center py-8 italic">Комментариев пока нет. Начните обсуждение!</p>
-              ) : (
-                comments.map(c => (
-                  <div key={c.id} className="flex gap-4">
-                    <div 
-                      className="w-10 h-10 bg-gray-100 rounded-2xl flex-shrink-0 flex items-center justify-center text-gray-500 font-bold cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => onUserClick(c.userId)}
-                    >
-                      {c.userName.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span 
-                          className="font-bold text-sm cursor-pointer hover:text-indigo-600 transition-colors"
-                          onClick={() => onUserClick(c.userId)}
-                        >
-                          {c.userName}
-                        </span>
-                        <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
-                          {c.createdAt?.toDate ? new Date(c.createdAt.toDate()).toLocaleDateString() : 'Только что'}
-                        </span>
-                      </div>
-                      <p className="text-gray-600 text-sm leading-relaxed">{c.text}</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <button 
-                          onClick={() => MovieService.likeComment(c.id, c.userId)}
-                          className="flex items-center gap-1 text-[10px] font-bold text-gray-400 hover:text-pink-500 transition-colors"
-                        >
-                          <Heart className="w-3 h-3" />
-                          {c.likes || 0}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
+              </div>
             </div>
           </div>
         </div>
