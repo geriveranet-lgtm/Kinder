@@ -99,12 +99,12 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
 
   return (
     <>
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg glass rounded-3xl px-6 py-3 flex justify-between items-center z-50 md:top-6 md:bottom-auto md:px-12">
-        <div className="hidden md:flex items-center gap-2 font-display text-2xl text-brand uppercase tracking-tighter">
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-lg md:max-w-none md:w-max glass rounded-3xl px-6 py-3 flex justify-between items-center z-50 md:top-6 md:bottom-auto md:px-12">
+        <div className="hidden md:flex items-center gap-2 font-display text-2xl text-brand uppercase tracking-tighter mr-8 shrink-0">
           <Trophy className="w-6 h-6" />
           <span>Киндер</span>
         </div>
-        <div className="flex justify-around w-full md:w-auto md:gap-8">
+        <div className="flex justify-around w-full md:w-auto md:gap-8 shrink-0">
           {[
             { id: 'battle', icon: Swords, label: 'Битва' },
             { id: 'reviews', icon: MessageSquare, label: 'Рецензии' },
@@ -131,7 +131,7 @@ const Navbar = ({ activeTab, onTabChange, user, isSyncing, onSync }: any) => {
             </button>
           ))}
         </div>
-        <div className="hidden md:flex items-center gap-4 z-50">
+        <div className="hidden md:flex items-center gap-4 z-50 ml-8 shrink-0">
           <UserMenu />
         </div>
       </nav>
@@ -2087,14 +2087,25 @@ function AppContent() {
       setEmailPromptVisible(false);
     } catch (err: any) {
       console.error("Email link sign in error:", err);
-      if (err.code === 'auth/expired-action-code') {
-        alert("Ошибка: Ссылка для входа истекла. Пожалуйста, запросите новую.");
-        window.history.replaceState(null, '', window.location.pathname);
-        setEmailPromptVisible(false);
-      } else if (err.code === 'auth/invalid-action-code') {
-        console.warn("Invalid action code - link might be expired or already used");
-        window.history.replaceState(null, '', window.location.pathname);
-        setEmailPromptVisible(false);
+      if (err.code === 'auth/expired-action-code' || err.code === 'auth/invalid-action-code') {
+        try {
+          const actionCodeSettings = {
+            url: window.location.origin + window.location.pathname,
+            handleCodeInApp: true,
+          };
+          await sendSignInLinkToEmail(auth, trimmedEmail, actionCodeSettings);
+          window.localStorage.setItem('emailForSignIn', trimmedEmail);
+          alert("Старая ссылка устарела или уже была использована. Мы отправили новую ссылку на ваш email!");
+          window.history.replaceState(null, '', window.location.pathname);
+          setEmailPromptVisible(false);
+          setIsEmailLinkSent(true);
+          setEmail(trimmedEmail);
+        } catch (sendErr: any) {
+          console.error("Error sending new link:", sendErr);
+          alert(`Не удалось отправить новую ссылку: ${sendErr.message}`);
+          window.history.replaceState(null, '', window.location.pathname);
+          setEmailPromptVisible(false);
+        }
       } else if (err.code === 'auth/invalid-email') {
         alert("Ошибка: Неверный email адрес. Пожалуйста, убедитесь, что вы ввели тот же email, на который была отправлена ссылка.");
       } else if (err.code === 'auth/quota-exceeded') {
@@ -2132,15 +2143,24 @@ function AppContent() {
             // Clean up the URL so it doesn't trigger again on refresh
             window.history.replaceState(null, '', window.location.pathname);
           })
-          .catch((err) => {
+          .catch(async (err) => {
             console.error("Email link sign in error:", err);
-            if (err.code === 'auth/expired-action-code') {
-              alert("Ошибка: Ссылка для входа истекла. Пожалуйста, запросите новую.");
-              window.history.replaceState(null, '', window.location.pathname);
-            } else if (err.code === 'auth/invalid-action-code') {
-              // This can happen if the link was already used or tampered with
-              console.warn("Invalid action code - link might be expired or already used");
-              window.history.replaceState(null, '', window.location.pathname);
+            if (err.code === 'auth/expired-action-code' || err.code === 'auth/invalid-action-code') {
+              try {
+                const actionCodeSettings = {
+                  url: window.location.origin + window.location.pathname,
+                  handleCodeInApp: true,
+                };
+                await sendSignInLinkToEmail(auth, emailForSignIn!, actionCodeSettings);
+                alert("Старая ссылка устарела или уже была использована. Мы отправили новую ссылку на ваш email!");
+                window.history.replaceState(null, '', window.location.pathname);
+                setIsEmailLinkSent(true);
+                setEmail(emailForSignIn!);
+              } catch (sendErr: any) {
+                console.error("Error sending new link:", sendErr);
+                alert(`Не удалось отправить новую ссылку: ${sendErr.message}`);
+                window.history.replaceState(null, '', window.location.pathname);
+              }
             } else if (err.code === 'auth/invalid-email') {
               alert("Ошибка: Неверный email адрес. Пожалуйста, убедитесь, что вы ввели тот же email, на который была отправлена ссылка.");
               setEmailPromptVisible(true);
